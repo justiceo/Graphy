@@ -1,71 +1,231 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
-    <script src="js/math.js"></script>
-    <script type="text/javascript" src="js/jsxgraphcore.js"></script>
-    <title>Quadratic Equation</title>
-</head>
-<style>
-    .row {
-        margin: 30px 0;
-    }
-</style>
-<body>
-    <div class="container">
+﻿﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <title>Quadratic Equation</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://www.dennisss.com/script/runner.js"></script>
+
+    <script type="application/python" name="solver">
+        def main(args):
+            eqn = math(args["eqn"])
+            return { "solution": str(roots(eqn, multiple=True))}
+    </script>
+    <script type="application/python" name="simplify">
+        def main(args):
+            eqn = math(args["eqn"])
+            return { "simplified": str(poly(eqn)) }
+    </script>
+    <script type="application/python" name="coefs">
+        def main(args):
+            eqn = math(args["eqn"])
+            #get the degree of the equation
+            deg = degree(eqn)
+            n_str = []
+            for i in range(deg+1) :
+                n_str.append(str(poly(eqn).nth(i)))
+            return { "coef": n_str }
+    </script>
+
+    <script>
+
+        function solving() {
+            var str = document.getElementById("eqn").value;
+            var sympy_str, graph_str, roots, coefficients, solve_str;
+            var coef_name = ["A", "B", "C", "D"];
+            var hashtable = {};
+
+            //change all ^ to **
+            sympy_str = to_sympy(str);
+
+            //get coefficients
+            $run("coefs", {
+                eqn: sympy_str
+            }, function (data) {
+                if (data.error)
+                    return;
+                coefficients = eval(data.coef);
+                sliders(coefficients); //make sliders with coefficients
+            })
+
+            //builds a hashtable of coefficients and uses them as slider points; draws slider
+            function sliders(coefficients) {
+                var graph = JXG.JSXGraph.initBoard('jxgbox2', { boundingbox: [-10, 2, 15, -10] });
+                for (i = 0; i < coef_name.length; i++) {
+                    hashtable[coef_name[i]] = coef_name[i];
+                }
+                for (i = 0; i < coefficients.length; i++) {
+                    a = coefficients[coefficients.length - i - 1];
+                    hashtable[coef_name[i]] = graph.create('slider', [[-10, i * -2], [10, i * -2], [-10, a, 10]], { name: hashtable[coef_name[i]], snapWidth: 1 });
+                }
+
+                reconstruct();
+
+                JXG.addEvent(document.getElementById('jxgbox2'), 'mouseleave', function () { left_live(); }, graph);
+                JXG.addEvent(document.getElementById('jxgbox2'), 'mouseenter', function () { going_live(); }, graph);
+
+                function left_live() {
+                    $("#jxgbox2").css({
+                        'border': '2px solid #555',
+                        'background-color': '#ddd',
+                        'transition': 'all 0.5s ease-in'
+                    });
+                    reconstruct();
+                }
+
+                function going_live() {
+                    $("#jxgbox2").css({
+                        'border': '2px solid red',
+                        'background-color': '#fff',
+                        'transition': 'all 0.5s ease-in'
+                    });
+                }
+
+
+            }
+
+            //after sliders are adjusted, the equation is rebuilt
+            function reconstruct() {
+
+                var reconstructed = "";
+                var cl = coefficients.length - 1;
+                for (i = 0; i < coefficients.length; i++) {
+                    if (i == cl) {
+                        reconstructed = reconstructed + "(" + hashtable[coef_name[cl - i]].X().toString() + "*x**" + i + ")";
+                    }
+                    else {
+                        reconstructed = reconstructed + "(" + hashtable[coef_name[cl - i]].X().toString() + "*x**" + i + ") + ";
+                    }
+                }
+                document.getElementById("test").innerHTML = reconstructed;
+               // simplify(reconstructed); //the rebuilt string is simplified using sympy
+            }
+
+            //simplifiy sympy_str
+            function simplify(recons_str) {
+                $run("simplify", {
+                    eqn: recons_str
+                }, function (data) {
+                    if (data.error) {
+                        return;
+                    }
+
+                    var simplified = data.simplified;
+                    working_str = sanitize(simplified); //strip off gabbage
+                    textbox_str = to_natural(working_str); //convert ** to ^
+                    jsxgraph_str = mathify(working_str); //convert ** to Math.pow
+                    plot(jsxgraph_str, simplified);
+                    document.getElementById("eqn").value = textbox_str; //update textbox with adjusted values
+                })
+            }
+
+            function plot(str, simplified) {
+                str = str.toString();
+                var main_graph = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-10, 10, 10, -10], axis: true });
+                var p1 = main_graph.create('point', [4, 5], { size: 4, name: "X" });
+                str = str + " + p1.X()";
+                main_graph.create('functiongraph', [function (x) { return eval(str); }]);
+                //main_graph.create('functiongraph', [function (x) { return 3*Math.cos(4*x) + 5*Math.sin(4*x); }]);
+
+               // solve(simplified); //solve equation
+            }
+
+            //solve sympy str
+            function solve(reconstructed_str) {
+                $run("solver", {
+                    eqn: reconstructed_str
+                }, function (data) {
+                    if (data.error)
+                        return;
+                    var roots = data.solution;
+                    document.getElementById("test").innerHTML = "roots are " + roots;
+                    ready();
+                })
+            }
+
+        }
+
+        function sanitize(str) {
+            var x = str.split(",");
+            x = x[0].toString();
+            x = x.split("(");
+            x = x[1].toString();
+            return x;
+        }
+
+        function mathify(operand) {
+            var op = operand;
+            var k = op.indexOf("**");
+            var x = k - 1;
+            var p = k + 2;
+            var rep = "Math.pow(" + op.charAt(x) + ", " + op.charAt(p) + ")";
+            var rep = op.substring(0, x) + rep + op.substring(p + 1);
+            operand = rep;
+            if (operand.indexOf("**") != -1) {
+                operand = mathify(operand);
+            }
+            return operand;
+
+        }
+
+        function to_sympy(str) {
+            return str.replace(/\^/g, "**");
+        }
+
+        function to_natural(str) {
+            return str.replace(/\*\*/g, "^");
+        }
+
+        function processing() {
+            $("#slider_btn").addClass('disabled');
+            $("#slider_btn").html("Processing...");
+        }
+        function ready() {
+            $("#slider_btn").removeClass('disabled');
+            $("#slider_btn").addClass('btn-default');
+            $("#slider_btn").html("Ready");
+        }
+
+    </script>
+</head>
+
+
+<body>
+
+    <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <form class="form-horizontal" role="form">
-                    <div class="form-group">
-                        <label for="a" class="col-sm-2 control-label">A</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="a" placeholder="1" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="b" class="col-sm-2 control-label">B</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="b" placeholder="-3" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="c" class="col-sm-2 control-label">C</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="c" placeholder="-18" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <button type="button" class="btn btn-default" onclick="quad_num()">Solve</button>
-                        </div>
-                    </div>
-                    
-                </form>
-
                 <form role="form">
                     <div class="form-group">
                         <label for="exampleInputEmail1">Enter an Equation</label>
-                        <input type="text" class="form-control" id="eqn" placeholder="x^2 + 3x - 4" />
+                        <input type="text" class="form-control" id="eqn" value="x^2 - 4x + 3" />
                     </div>
-                    <button type="button" class="btn btn-default" onclick="quad_eqn()">Solve</button>
+                    <button type="button" id="solve2" class="btn btn-default" onclick="solving()">Solve</button>
                 </form>
             </div>
+
             <div class="col-md-8">
-                
-                <div id="jxgbox" class="jxgbox" style="width:800px; height:500px; border: 2px solid #aaa;"></div>
-                <p id="solution" class="text-primary"></p>
+                <div id="jxgbox" class="jxgbox" style="width:700px; height:500px; border: 2px solid #aaa;"></div>
+                <p id="test"></p>
+                <p id="testing"></p>
+                <p id="error">Once you're done making changes, leave the slider box for reprocessing</p>
+                <div id="jxgbox2" class="jxgbox2" style="width:700px; height:200px; border: 2px solid #aaa;"></div>
+                <!--<button type="button" id="slider_btn" class="btn btn-primary" onclick="processing()">Done</button> -->
             </div>
         </div>
 
-       
-        <div class="row">
-           
-        </div>
+    </div>
 
-    </div>   
+    <style>
+        .row {
+            margin: 30px 0;
+        }
+    </style>
 
 </body>
+
 </html>

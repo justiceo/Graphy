@@ -55,7 +55,7 @@ function solve(a,b,c) {
 	plot(a, b, c, x1, x2);
 }
 
-//uses the three points to build a sympy parabola
+//uses the three points to build a jsxgraph parabola
 function plot(a, b, c, x1, x2) {    
     var h = -(b / 2 * a);
     var k = (4 * a * c - b * b) / (4 * a);
