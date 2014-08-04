@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -9,31 +9,8 @@
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://www.dennisss.com/script/runner.js"></script>
-    <script src="math.js" type="text/javascript"></script>
 
-    <script type="application/python" name="solver">
-        def main(args):
-            eqn = math(args["eqn"])
-            return { "solution": str(roots(eqn, multiple=True))}
-    </script>
-    <script type="application/python" name="simplify">
-        def main(args):
-            eqn = math(args["eqn"])
-            return { "simplified": str(poly(eqn)) }
-    </script>
-    <script type="application/python" name="coefs">
-        def main(args):
-            eqn = math(args["eqn"])
-            #get the degree of the equation
-            deg = degree(eqn)
-            n_str = []
-            for i in range(deg+1) :
-                n_str.append(str(poly(eqn).nth(i)))
-            return { "coef": n_str }
-    </script>
-<script type="application/python" src="symextraction.py" name="symextraction"></script>
-    
-    <script type="application/python" name="symextractions">
+<script type="application/python" name="symextractions">
 def main(argsu):
     
 	x, y, z = symbols('x y z')
@@ -41,7 +18,7 @@ def main(argsu):
 	expp = math(argsu["eqn"])
 
 	stack = []
-	coef = ["f", "e", "d", "c", "b", "a"]
+	coef = ["$f", "$e", "$d", "$c", "$b", "$a"]
 	d = {}
 	export = []
 
@@ -119,106 +96,68 @@ def main(argsu):
 
 
     <script>
-
         function solving() {
             var str = document.getElementById("eqn").value;
-            var sympy_str, graph_str, roots, coefficients, solve_str;
-            var coef_name = ["A", "B", "C", "D"];
-            var hashtable = {};
-            var jsontable = {};
+            var sympy_str, graph_str;
+            var coeftable = {};
             var keys = [];
+            var keys_dup = [];
 
-            // load math.js
-            //var math = require('../index');
 
             //change all ^ to **
             sympy_str = to_sympy(str);
 
-            //get coefficients
-            $run("coefs", {
-                eqn: sympy_str
-            }, function (data) {
-                if (data.error)
-                    return;
-                coefficients = eval(data.coef);
-                extract();
-            })
+            //extract coefficients
+            extract();
 
             function extract() {
-
-                //extract symbols
                 $run("symextractions", {
                     eqn: sympy_str
                 }, function (data) {
                     if (data.error) {
-                        document.getElementById("testing").innerHTML = data.error;
                         return;
                     }
-                    var geneqn = data.jsready;
+                    graph_str = data.jsready;
                     var parsed = JSON.parse(data.jsonarray);
-                   
                     for (var key in parsed) {
                         keys.push(key);
-                        jsontable[key] = parsed[key];
+                        coeftable[key] = parsed[key];
                     }
-                                       
+                    keys_dup = keys.slice(0);
                     plot();
                 })
 
             }
 
-            /*function mathjs(geneqn) {
-                geneqn = to_natural(geneqn);                
-                var node1 = math.parse(geneqn);
-                var code1 = node1.compile(math);
-                
-                var scope = {
-                    a: 3,
-                    b: 4
-                }
-                var result = code1.eval(scope);
-                document.getElementById("test").innerHTML = node1.toString();
-                plot();
-            }*/
-
             function plot() {
-                //str = str.toString();
                 var main_graph = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-10, 10, 15, -15], axis: true });
-
-                for (i = 0; i < coef_name.length; i++) {
-                    hashtable[coef_name[i]] = coef_name[i];
-                    //alert(hashtable[coef_name[i]]);
-                }
-                for (i = 0; i < coefficients.length; i++) {
-                    a = coefficients[coefficients.length - i - 1];
-                    hashtable[coef_name[i]] = main_graph.create('slider', [[-10, -14- i * -1], [10, -14 - i * -1], [-10, a, 10]], { name: hashtable[coef_name[i]]});
-                }
-
+                //make the sliders
                 for (i = 0; i < keys.length; i++) {
-                    a = jsontable[keys[i]];
-                    jsontable[keys[i]] = main_graph.create('slider', [[-9, -11 - i * -1], [9, -11 - i * -1], [-9, a, 10]], { name: keys[i] });
+                    a = coeftable[keys[i]];
+                    coeftable[keys[i]] = main_graph.create('slider', [[-10, -14 - i * -1], [10, -14 - i * -1], [-10, a, 10]], { name: keys[i] });
                 }
 
-                function reconstruct() {
+                //prettify and graph equation
+                var ready_str = transify(graph_str);
+                ready_str = substi(ready_str);
+                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }]);
 
-                    var reconstructed = "";
-                    var cl = coefficients.length - 1;
-                    for (i = 0; i < coefficients.length; i++) {
-                        if (i == cl) {
-                            reconstructed = reconstructed + "( hashtable[coef_name[" + eval(cl - i) + "]].X() * Math.pow(x, " + i + "))";
-                        }
-                        else {
-                            reconstructed = reconstructed + "( hashtable[coef_name[" + eval(cl - i) + "]].X() * Math.pow(x, " + i + ")) + ";
-                        }
+				//this is pretty much all I'll need math.js for...I think
+                function substi(eqn_str) {
+                    var g = keys_dup.pop();
+                    var p = eqn_str.indexOf(g);
+                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].X()" + eqn_str.substring(p + 2);
+                    rep = rep.toString();
+                    if (keys_dup.length > 0) {
+                        rep = substi(rep);
                     }
-                    reconstructed = reconstructed.toString();
-                    return reconstructed;
+                    rep = rep.toString();
+                    return rep;
                 }
-                main_graph.create('functiongraph', [function (x) { return eval(reconstruct()); }]);
             }
-
-
         }
+
+
 
         function to_sympy(str) {
             return str.replace(/\^/g, "**");
@@ -228,6 +167,15 @@ def main(argsu):
             return str.replace(/\*\*/g, "^");
         }
 
+        //cosify, tanify, sinify, sqrify, cotify, logify
+        function transify(torify) {
+            torify = torify.replace(/(\w)\*\*(\d)/g, "Math.pow($1,$2)");
+            torify = torify.replace(/cos/g, "Math.cos");
+            torify = torify.replace(/sin/g, "Math.sin");
+            torify = torify.replace(/tan/g, "Math.tan");
+            torify = torify.replace(/sqrt/g, "Math.sqrt");
+            return torify;
+        }
 
     </script>
 </head>
@@ -241,7 +189,7 @@ def main(argsu):
                 <form role="form">
                     <div class="form-group">
                         <label for="exampleInputEmail1">Enter an Equation</label>
-                        <input type="text" class="form-control" id="eqn" value="x**2 - 4*x + 3" />
+                        <input type="text" class="form-control" id="eqn" value="3cos(4x) + 5sin(4x)" />
                     </div>
                     <button type="button" id="solve2" class="btn btn-default" onclick="solving()">Solve</button>
                 </form>
@@ -249,8 +197,8 @@ def main(argsu):
 
             <div class="col-md-8">
                 <div id="jxgbox" class="jxgbox" style="width:800px; height:800px; border: 2px solid #aaa;"></div>
-                <p id="test">test</p>
-                <p id="testing">testing</p>
+                <p id="test"></p>
+                <p id="testing"></p>
             </div>
         </div>
 

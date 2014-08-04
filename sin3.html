@@ -41,7 +41,7 @@ def main(argsu):
 	expp = math(argsu["eqn"])
 
 	stack = []
-	coef = ["f", "e", "d", "c", "b", "a"]
+	coef = ["w", "v", "u", "l", "k", "j"]
 	d = {}
 	export = []
 
@@ -125,12 +125,11 @@ def main(argsu):
             var sympy_str, graph_str, roots, coefficients, solve_str;
             var coef_name = ["A", "B", "C", "D"];
             var hashtable = {};
-            var jsontable = {};
+            var coeftable = {};
             var keys = [];
+            var keys_dup = [];
 
-            // load math.js
-            //var math = require('../index');
-
+           
             //change all ^ to **
             sympy_str = to_sympy(str);
 
@@ -155,70 +154,51 @@ def main(argsu):
                         return;
                     }
                     var geneqn = data.jsready;
+                    graph_str = data.jsready;
                     var parsed = JSON.parse(data.jsonarray);
                    
                     for (var key in parsed) {
                         keys.push(key);
-                        jsontable[key] = parsed[key];
+                        coeftable[key] = parsed[key];
                     }
-                                       
+                    keys_dup = keys.slice(0);
                     plot();
                 })
 
             }
 
-            /*function mathjs(geneqn) {
-                geneqn = to_natural(geneqn);                
-                var node1 = math.parse(geneqn);
-                var code1 = node1.compile(math);
-                
-                var scope = {
-                    a: 3,
-                    b: 4
-                }
-                var result = code1.eval(scope);
-                document.getElementById("test").innerHTML = node1.toString();
-                plot();
-            }*/
-
             function plot() {
-                //str = str.toString();
-                var main_graph = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-10, 10, 15, -15], axis: true });
-
-                for (i = 0; i < coef_name.length; i++) {
-                    hashtable[coef_name[i]] = coef_name[i];
-                    //alert(hashtable[coef_name[i]]);
-                }
-                for (i = 0; i < coefficients.length; i++) {
-                    a = coefficients[coefficients.length - i - 1];
-                    hashtable[coef_name[i]] = main_graph.create('slider', [[-10, -14- i * -1], [10, -14 - i * -1], [-10, a, 10]], { name: hashtable[coef_name[i]]});
-                }
-
+                var main_graph = JXG.JSXGraph.initBoard('jxgbox', { boundingbox: [-10, 10, 15, -15], axis: true });               
                 for (i = 0; i < keys.length; i++) {
-                    a = jsontable[keys[i]];
-                    jsontable[keys[i]] = main_graph.create('slider', [[-9, -11 - i * -1], [9, -11 - i * -1], [-9, a, 10]], { name: keys[i] });
+                    a = coeftable[keys[i]];
+                    coeftable[keys[i]] = main_graph.create('slider', [[-10, -14 - i * -1], [10, -14 - i * -1], [-10, a, 10]], { name: keys[i] });
                 }
+                
+                var ready_str = mathify(graph_str);
+                //ready_str = substi(ready_str);
+                var ready_str2 = substi("k*Math.pow(x,2) + j*x + l");
+                document.getElementById("test").innerHTML = "hullo " + ready_str2;
+                document.getElementById("testing").innerHTML = "str " + ready_str;
+                main_graph.create('functiongraph', [function (x) { return eval(ready_str2); }]);
 
-                function reconstruct() {
-
-                    var reconstructed = "";
-                    var cl = coefficients.length - 1;
-                    for (i = 0; i < coefficients.length; i++) {
-                        if (i == cl) {
-                            reconstructed = reconstructed + "( hashtable[coef_name[" + eval(cl - i) + "]].X() * Math.pow(x, " + i + "))";
-                        }
-                        else {
-                            reconstructed = reconstructed + "( hashtable[coef_name[" + eval(cl - i) + "]].X() * Math.pow(x, " + i + ")) + ";
-                        }
+                function substi(eqn_str) {
+                    var g = keys_dup.pop();
+                    var p = eqn_str.indexOf(g);
+                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].X()" + eqn_str.substring(p + 1);
+                    rep = rep.toString();
+                    if (keys_dup.length > 0) {
+                        rep = substi(rep);
                     }
-                    reconstructed = reconstructed.toString();
-                    return reconstructed;
+                    rep = rep.toString();
+                    return rep;
                 }
-                main_graph.create('functiongraph', [function (x) { return eval(reconstruct()); }]);
             }
 
+            
 
         }
+
+        
 
         function to_sympy(str) {
             return str.replace(/\^/g, "**");
@@ -228,6 +208,22 @@ def main(argsu):
             return str.replace(/\*\*/g, "^");
         }
 
+        function mathify(operand) {
+            var op = operand;
+            var k = op.indexOf("**");
+            var x = k - 1;
+            var p = k + 2;
+            var rep = "Math.pow(" + op.charAt(x) + ", " + op.charAt(p) + ")";
+            var rep = op.substring(0, x) + rep + op.substring(p + 1);
+            operand = rep;
+            if (operand.indexOf("**") != -1) {
+                operand = mathify(operand);
+            }
+            return operand;
+
+        }
+
+        
 
     </script>
 </head>
@@ -241,7 +237,7 @@ def main(argsu):
                 <form role="form">
                     <div class="form-group">
                         <label for="exampleInputEmail1">Enter an Equation</label>
-                        <input type="text" class="form-control" id="eqn" value="x**2 - 4*x + 3" />
+                        <input type="text" class="form-control" id="eqn" value="2x**2 - 8*x + 3" />
                     </div>
                     <button type="button" id="solve2" class="btn btn-default" onclick="solving()">Solve</button>
                 </form>
