@@ -11,16 +11,17 @@
     <script src="https://www.dennisss.com/script/runner.js"></script>
 
 <script type="application/python" name="symextractions">
-def main(argsu):
+def main(args):
     
 	x, y, z = symbols('x y z')
 	expr = 2*x**4 + x**3 + 5*x**2 + 7*x + 11
-	expp = math(argsu["eqn"])
+	expp = math(args["eqn"])
 
 	stack = []
 	coef = ["$f", "$e", "$d", "$c", "$b", "$a"]
 	d = {}
 	export = []
+	
 
 	for arg in postorder_traversal(expp):
 		temp = ""
@@ -90,13 +91,17 @@ def main(argsu):
 
 
 	temp = str(stack.pop())
-
-	return { "jsready": temp, "jsonarray": json.dumps(d) }
+	
+	if(is_multivariate(expp)):
+		error = "Only univariate expressions can be graphed "
+		return {"errorlog": error }
+	else:
+		return { "jsready": temp, "jsonarray": json.dumps(d) }
 </script>
 
 
     <script>
-        function solving() {
+        function graph() {
             var str = document.getElementById("eqn").value;
             var sympy_str, graph_str;
             var coeftable = {};
@@ -117,6 +122,10 @@ def main(argsu):
                     if (data.error) {
                         return;
                     }
+					error = data.errorlog;
+					if(error != "") {
+						document.getElementById("error").innerHTML = error;
+					}
                     graph_str = data.jsready;
                     var parsed = JSON.parse(data.jsonarray);
                     for (var key in parsed) {
@@ -134,7 +143,7 @@ def main(argsu):
                 //make the sliders
                 for (i = 0; i < keys.length; i++) {
                     a = coeftable[keys[i]];
-                    coeftable[keys[i]] = main_graph.create('slider', [[-9, -14 - i * -1], [9, -14 - i * -1], [-10*a, a, 10*a]], { name: keys[i] });
+                    coeftable[keys[i]] = main_graph.create('slider', [[-9, -14 - i * -1], [9, -14 - i * -1], [-10*a, a, 10*a]], { name: keys[i], size: 10, face:'[]' });
                 }
 
                 //prettify and graph equation
@@ -144,15 +153,11 @@ def main(argsu):
 
 				//this is pretty much all I'll need math.js for...I think
                 function substi(eqn_str) {
-                    var g = keys_dup.pop();
-                    var p = eqn_str.indexOf(g);
+                    var p = eqn_str.indexOf(keys_dup.pop());
                     var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].Value()" + eqn_str.substring(p + 2);
                     rep = rep.toString();
-                    if (keys_dup.length > 0) {
-                        rep = substi(rep);
-                    }
-                    rep = rep.toString();
-                    return rep;
+                    if (keys_dup.length > 0) rep = substi(rep);
+                    return rep.toString();
                 }
             }
         }
@@ -191,12 +196,13 @@ def main(argsu):
                         <label for="exampleInputEmail1">Enter an Equation</label>
                         <input type="text" class="form-control" id="eqn" value="3cos(4x) + 5sin(4x)" />
                     </div>
-                    <button type="button" id="solve2" class="btn btn-default" onclick="solving()">Solve</button>
+                    <button type="button" id="graph" class="btn btn-primary" onclick="graph()">Graph</button>
                 </form>
             </div>
 
             <div class="col-md-8">
-                <div id="jxgbox" class="jxgbox" style="width:800px; height:800px; border: 2px solid #aaa;"></div>
+                <div id="jxgbox" class="jxgbox" style="width:800px; height:800px; border: 2px solid #aaa;"></div><br />
+                <button type="button" id="solve" class="btn btn-primary" onclick="solve()">Solve</button>
                 <p id="test"></p>
                 <p id="testing"></p>
             </div>

@@ -134,19 +134,18 @@ def main(argsu):
                 //make the sliders
                 for (i = 0; i < keys.length; i++) {
                     a = coeftable[keys[i]];
-                    coeftable[keys[i]] = main_graph.create('slider', [[-9, -14 - i * -1], [9, -14 - i * -1], [-10*a, a, 10*a]], { name: keys[i] });
+                    coeftable[keys[i]] = main_graph.create('slider', [[-10, -14 - i * -1], [10, -14 - i * -1], [-10, a, 10]], { name: keys[i] });
                 }
 
                 //prettify and graph equation
                 var ready_str = transify(graph_str);
                 ready_str = substi(ready_str);
-                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }], {strokeColor:'black', strokeWidth:2});
+                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }]);
 
-				//this is pretty much all I'll need math.js for...I think
                 function substi(eqn_str) {
                     var g = keys_dup.pop();
                     var p = eqn_str.indexOf(g);
-                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].Value()" + eqn_str.substring(p + 2);
+                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].X()" + eqn_str.substring(p + 2);
                     rep = rep.toString();
                     if (keys_dup.length > 0) {
                         rep = substi(rep);
@@ -189,7 +188,7 @@ def main(argsu):
                 <form role="form">
                     <div class="form-group">
                         <label for="exampleInputEmail1">Enter an Equation</label>
-                        <input type="text" class="form-control" id="eqn" value="3cos(4x) + 5sin(4x)" />
+                        <input type="text" class="form-control" id="eqn" value="2x**2 - 8*x + 3" />
                     </div>
                     <button type="button" id="solve2" class="btn btn-default" onclick="solving()">Solve</button>
                 </form>
@@ -197,8 +196,8 @@ def main(argsu):
 
             <div class="col-md-8">
                 <div id="jxgbox" class="jxgbox" style="width:800px; height:800px; border: 2px solid #aaa;"></div>
-                <p id="test"></p>
-                <p id="testing"></p>
+                <p id="test">test</p>
+                <p id="testing">testing</p>
             </div>
         </div>
 

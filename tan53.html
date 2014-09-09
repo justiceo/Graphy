@@ -1,0 +1,590 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <title>Quadratic Equation</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://www.dennisss.com/script/runner.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+
+<script type="application/python" name="symextractions">
+'''
+I've started work on showing the effect of a coefficent in the equation,
+It's underway, and some piece of the code might be lying around in here
+For the solve part, I simply assumed that most if not all univariate expressions can be solved
+Not really well tested
+Last thing the chain of if/elif/else is kinda scary ... so I'm imaginig some scary bugs in there! tell me bout 'em
+'''
+
+def main(args):
+    
+	x, y, z = symbols('x y z')
+	a, b, c, d, e, f, g, h, i, j, k, kkz = symbols('a b c d e f g h i j k kkz')
+	kka, kkb, kkc, kkd, kke, kkf, kkg, kkh, kki, kkj, kkk, kkz = symbols('kka kkb kkc kkd kke kkf kkg kkh kki kkj kkk kkz')
+	expp = "x**2 + 6*x*cos(x) + 9 + tan(x+3)"
+	expp = math(args["eqn"])
+	expp = sympify(expp)
+	stack = []
+	coef = ["$k", "$j", "$i", "$h", "$g", "$f", "$e", "$d", "$c", "$b", "$a"]
+	d = {}
+	id_stack = []
+	single_arg = False
+	single_letter = False
+	single_pow = False
+	int_present = False
+	can_be_solved = "0"
+	bounds_stack = []
+
+
+	def stack_id(temp_str):
+		temp_str = str(temp_str)
+		for key in d:
+			if( temp_str.find(key) != -1 ):
+				temp_str = temp_str.replace(key, str(d[key]))
+
+		temp_str = id_stack_clean(temp_str)
+		id_stack.append(temp_str)
+
+	'''clean for sympy comparison'''	
+	def cleanx(temp_str):
+		temp_str = str(temp_str)
+		temp_str = temp_str.replace("$","")
+		temp_str = sympify(temp_str)
+		return temp_str
+
+	def id_stack_clean(temp_str):
+		temp_str = str(temp_str)
+		temp_str = temp_str.replace("$","kk")
+		temp_str = simplify(temp_str)
+		temp_str = str(temp_str)
+		temp_str = temp_str.replace("kk","$")
+		return temp_str
+
+	if(isinstance(expp, Symbol)):
+		substitute = coef.pop()
+		single_letter = substitute + "*" + str(expp)
+		stack_id(single_letter) 
+		d.update({substitute: int(1)})
+	elif(isinstance(expp, Integer)):
+		substitute = coef.pop()
+		single_letter = substitute 
+		stack_id(single_letter)
+		d.update({substitute: str(expp)})
+		bounds_stack.append(str(expp))
+		
+	elif(isinstance(expp, Rational)):
+		substitute = coef.pop()
+		single_letter = substitute
+		stack_id(single_letter)
+		d.update({substitute: str((expp).evalf(5))})
+		bounds_stack.append(str(expp))
+	
+	elif(len(expp.args) == 1 ):
+		single_arg = True
+	elif(isinstance(expp, Pow)):
+		single_pow = True
+
+	for arg in postorder_traversal(expp):
+		temp = ""
+		if( isinstance(arg, Integer) or isinstance(arg, Symbol) ):			
+			stack.append(arg)
+		elif(isinstance(arg, Rational)):
+			temp = ""
+			temp = "(" + str(arg) + ")"
+			stack.append(temp)
+		elif( isinstance(arg, Mul)):
+			mlen = len(arg.args)
+			temp = ""
+			for i in range(mlen):
+				if( i == 0 ):
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute
+						stack_id(temp)
+						d.update({substitute:int(x)})
+						int_present = True
+					else:
+						temp = str(x)
+				else:
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute + "*" + temp
+						stack_id(temp)
+						d.update({substitute:int(x)})
+						int_present = True
+					else:
+						temp = str(x) + "*" + temp
+			if(int_present):
+				stack.append(temp)
+				int_present = False
+			else:
+				substitute = coef.pop()
+				temp = substitute + "*" + temp
+				stack_id(temp)
+				d.update({substitute:int(1)})
+				stack.append(temp)
+
+		elif( isinstance(arg, Add)):
+			alen = len(arg.args)
+			temp = ""
+			for i in range(alen):
+				if( i == 0 ):
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute
+						stack_id(temp)
+						d.update({substitute:int(x)})
+					else:
+						testvar = cleanx(x)
+						if( isinstance(testvar, Mul)):
+							temp = str(x)
+						else:
+							substitute = coef.pop()
+							temp = substitute + "*" + str(x)
+							stack_id(temp)
+							d.update({substitute: int(1)})
+				else:
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute + " + " + temp
+						stack_id(temp)
+						d.update({substitute:int(x)})
+					else:
+						testvar = cleanx(x)
+						if( isinstance(testvar, Mul)):
+							temp = str(x) + " + " + temp
+						else:
+							substitute = coef.pop()
+							temp = substitute + "*" + str(x) + " + " + temp
+							stack_id(temp)
+							d.update({substitute: int(1)})		
+			stack.append(temp)
+		elif( isinstance(arg, Pow)):
+			plen = len(arg.args)
+			temp = ""
+			for i in range(plen):
+				if( i == 0 ):
+					temp = str(stack.pop())
+				else:
+					temp = str(stack.pop()) + "**" + temp
+			if(single_pow):
+				substitute = coef.pop()
+				temp = substitute + "*" + temp
+				stack_id(temp)
+				d.update({substitute: int(1)})
+			stack.append(temp)
+		else:
+			temp = str(arg.func)
+			x = stack.pop()
+			if( isinstance(x, Symbol)):
+				substitute = coef.pop()
+				temp = temp + "(" + substitute + "*" + str(x) + ")"
+				stack_id(temp)
+				d.update({substitute: int(1)})
+			elif( isinstance(x, Integer)):
+				substitute = coef.pop()
+				temp = temp + "(" + substitute + ")"
+				stack_id(temp)
+				d.update({substitute: int(x)})
+			else:
+				temp = temp + "(" + str(x) + ")"
+				
+			if(single_arg):
+				substitute = coef.pop()
+				temp = substitute + "*" + temp  
+				stack_id(temp)
+				d.update({substitute: int(1)})			
+			
+			stack.append(temp)
+
+
+
+
+	if(single_letter):	
+		temp = single_letter
+	else:
+		temp = str(stack.pop())
+		if(Poly(expp).is_univariate):
+			can_be_solved = "1"
+			first_d = diff(expp)
+			c_points = solve(first_d)
+			pgen = Poly(expp).gen
+			for cpoint in c_points:
+				y_values = expp.subs(pgen, cpoint).evalf(5)
+				y_values = str(y_values)
+				bounds_stack.append(y_values)
+
+
+	return { "jsready": temp, "jsonarray": json.dumps(d), "solvable": can_be_solved, "idStack": id_stack, "gbounds": bounds_stack }
+</script>
+
+
+    <script>
+		function initGraph() {
+				main_graph = JXG.JSXGraph.initBoard('jxgbox',
+                    {
+                        boundingbox: windowState(),
+                        axis: true,
+                        grid: true,
+                        keepaspectratio: true,
+                        showNavigation: false,
+                        zoom: { wheel: true },
+                        pan: { enabled: true, needShift: false, needTwoFingers: false },
+                        showCopyright: false
+                    });
+				var dummy = main_graph.create('point', [0,0], {visibility: "hidden"});
+				dummy.hideElement();
+			}
+        function graphy() {
+            var str = document.getElementById("eqn").value;
+            var sympy_str, graph_str;
+            var coeftable = {};
+            var coeftable_dup= [];
+            var keys = [];
+            var keys_dup = [];
+
+
+            //change all ^ to **
+            sympy_str = to_sympy(str);
+
+            //extract coefficients
+            extract();
+
+            function extract() {
+                $run("symextractions", {
+                    eqn: sympy_str
+                }, function (data) {
+                    if (data.error) {
+						alert(data.error);
+						return;
+                    }
+                    graph_str = data.jsready;
+					coef_id = data.idStack;
+					bounds = data.gbounds;
+                    var parsed = JSON.parse(data.jsonarray);
+                    for (var key in parsed) {
+                        keys.push(key);
+                        coeftable[key] = parsed[key];
+                    }
+                    keys_dup = keys.slice(0);
+                    keys_dup2 = keys.slice(0);
+                    plot();
+					if(data.solvable == "1" ) {
+						$("#solve, #solution").css({
+							'visibility': 'visible'
+						});
+						$("#solution").text("");
+					}
+					else {
+						$("#solve, #solution").css({
+							'visibility': 'hidden'
+						});
+					}
+                })
+
+            }
+			
+			
+
+            function plot() {
+                initGraph();
+                //make the sliders
+                $("#jxgsliders").css({ "height": 40 * keys.length });
+                $(".coef-control").css({ "height": 40 * keys.length + 20 });
+				var slider_graph = JXG.JSXGraph.initBoard('jxgsliders',
+                    {
+                        boundingbox: [-20, 5*keys.length, 20, -5],
+						axis: false,
+						showCopyright: false,
+						showNavigation: false
+                    });	
+					
+					bf=[];
+					af=[];
+				for (i = 0; i < keys.length; i++) coeftable_dup.push(coeftable[keys[i]]);					
+                for (i = 0; i < keys.length; i++) {
+                    a = coeftable[keys[i]];
+					var cname = keys[i].replace("$", "");
+                    //coeftable[keys[i]] = slider_graph.create('slider', [[-19, i * 5], [9, i * 5], [-10*a, a, 10*a]], { name: cname, color: "#3071A9", size: 5});
+					coeftable[keys[i]] = slider_graph.create('slider', [[-19, i * 5], [9, i * 5], [-10*a, a, 10*a]],
+						{
+							name: cname,
+							strokeColor: "#ddd",
+							highlightStrokeColor: "red",
+							fillColor: "#3071A9",
+							id: i,
+						});
+					
+					crest= "";
+					for( j=0; j<coef_id.length; j++) {
+						var cindex = coef_id[j].indexOf(keys[i]);
+						if( cindex != -1) {
+							crest = coef_id[j].substring(cindex+2);
+							bf[i] = coef_id[j].substring(0, cindex);
+							af[i] = coef_id[j].substring(cindex+2);
+						}						
+					}
+					//coeftable[keys[i]].id(i.toString());
+					coeftable[keys[i]].setName( bf[i] + coeftable_dup[i] + af[i] );
+					
+					coeftable[keys[i]].on('drag', function() { this.setName( bf[this.id] + this.Value().toFixed(1) + af[this.id]  )});
+                }
+				slider_graph.unsuspendUpdate();
+				
+                //prettify and graph equation
+                var ready_str = transify(graph_str);
+                ready_str = substi(ready_str);
+				//ready_str = "1*Math.pow(Math.cos(x), -1)";
+                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }], {strokeColor:'black', strokeWidth:2});
+				main_graph.unsuspendUpdate();
+				slider_graph.addChild(main_graph);
+
+				
+                function substi(eqn_str) {
+                    var p = eqn_str.indexOf(keys_dup.pop());
+                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].Value()" + eqn_str.substring(p + 2); //the sliders are right in the equation
+                    rep = rep.toString();
+                    if (keys_dup.length > 0) rep = substi(rep);
+                    return rep.toString();
+                }
+				
+				$(".coef-control").css("visibility", "visible");
+				$("#jxgsliders").children("svg").children("g").children("line:odd").attr({
+					"stroke-width": "10px"
+				});
+            }
+        }
+
+        function windowState() {
+            windowHeight = $(window).height();
+            windowWidth = $(window).width();
+			var ww = windowWidth / -70;
+			var wn = windowHeight / 70;
+			var we = windowWidth / 70;
+			var ws = windowHeight / -70;
+			
+				for(i=0; i<bounds.length; i++) {
+					if( bounds[i] < ws) {
+						ws = eval(bounds[i]) + ws;
+						ww = ww + eval(bounds[i]);
+					}
+					if( bounds[i] > wn ) {
+						wn = wn + eval(bounds[i]);
+						ww = ww - eval(bounds[i]);
+					}
+				}
+			
+			
+            borderValues = [ww, wn, we, ws];
+            return borderValues;
+
+        }
+        
+
+        function to_sympy(str) {
+            return str.replace(/\^/g, "**");
+        }
+
+        function to_natural(str) {
+            return str.replace(/\*\*/g, "^");
+        }
+
+        //cosify, tanify, sinify, sqrify, cotify, logify
+        function transify(torify) {
+            //torify = torify.replace(/(\W{1}\w{1})\*(.)\*\*(-?\d)/g, "$1*Math.pow($2,$3)");
+			torify = torify.replace(/(\w)\*\*(-?\d+)/g, "Math.pow($1,$2)");
+			
+			torify = torify.replace(/(cos\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");			
+            torify = torify.replace(/cos/g, "Math.cos");
+			
+            torify = torify.replace(/(sin\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
+			torify = torify.replace(/sin/g, "Math.sin");
+			
+			torify = torify.replace(/(tan\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
+            torify = torify.replace(/tan/g, "Math.tan");
+			
+            torify = torify.replace(/sqrt/g, "Math.sqrt");
+            return torify;
+        }
+		
+		function solve() {
+			var str = document.getElementById("eqn").value;
+            sympy_str = to_sympy(str);
+			$run("solver", {
+                eqn: sympy_str
+            }, function (data) {
+                if (data.error)
+                    return;
+                roots = eval(data.solution);
+                document.getElementById("solution").innerHTML = "The solution is : x = " + roots;
+            });
+		}
+
+    </script>
+	
+    <script type="application/python" name="solver">
+        def main(args):
+            eqn = math(args["eqn"])
+            return { "solution": str(roots(eqn, multiple=True))}
+    </script>
+
+    <script>
+        $(function () {
+
+            var is_minimized = false;
+            var is_restored = true;
+
+            $("#draggable").draggable({ handle: "#drag-handle", containment: "#page-wrap" });
+            $("#draggable2").draggable({ handle: "#drag-handle2", containment: "#page-wrap" });
+            $("#drag-handle2, #drag-handle").disableSelection();
+
+            $("#minimize").on('click', function () {
+                $("#draggable2").animate({
+                    "top": "98%"
+                }, 1000, function () {
+                    $("#minimize").text("+");
+                    $("#draggable2").draggable('disable');
+                    $("#minimize").attr("id", "restore");
+                });
+                
+            });
+
+            $("#restore").on('click', function () {
+                alert("clicked");
+               /* $("#draggable2").animate({
+                    "top": "50%"
+                }, 1000, function () {
+                    $("#restore").text("--");
+                    $("#draggable2").draggable('enable');
+                    $("#restore").attr("id", "minimize");
+                });*/
+            });
+        });
+
+
+        function panelControls() {
+           
+
+        }
+    </script>
+	
+</head>
+
+
+<body onload="initGraph()">
+    <div id="jxgbox" class="jxgbox" style="height:100vh"></div><br />
+    <div id="page-wrap">
+        <div id="draggable" class="ui-widget-content control">
+            <p id="drag-handle" class="ui-widget-header"></p>
+            <form role="form">
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Enter an Equation</label>
+                    <input type="text" class="form-control" id="eqn" value="x" />
+                </div>
+                <button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
+                <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />
+                <p id="solution"></p>
+                <p id="error"></p>
+                <p id="test"></p>
+            </form>
+        </div>
+
+        <div id="draggable2" class="ui-widget-content coef-control">
+            <p id="drag-handle2" class="ui-widget-header"></p>
+            <p id="minimize">--</p>
+            <div id="jxgsliders" class="jxgsliders" style=" width: 460px; position: absolute;"></div>
+        </div>
+    </div>
+    
+
+
+        <style>
+
+            #minimize, #restore {
+                position: absolute;
+                top: -16px;
+                right: 25px;
+                background: #aaa;
+                height: 20px;
+                width: 34px;
+                z-index: 1999;
+                border-radius: 4px;
+                color: white;
+                text-align: center;
+                font-weight: bold;
+                font-size: 20px;
+                letter-spacing: -1px;
+                line-height: 18px;
+            }
+            .control {
+                position: absolute;
+                top: 50px;
+                left: 50px;
+                background: rgba(255,255,255, 0.8);
+                width: 350px;
+                min-height: 150px;
+                border: 1px solid #999;
+                border-radius: 10px;
+                padding: 20px 0 20px;
+                z-index: 1000;
+                -webkit-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+                -moz-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+                box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+            }
+            
+            #drag-handle, #drag-handle2 {
+                cursor: move;
+                height: 15px;
+                width: 100%;
+                background: #aaa;
+                margin: -20px 0 0;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+
+            form {
+                padding: 15px 15px 0;
+            }
+
+            .coef-control {
+                position: absolute;
+                top: 70%;
+                left: 50px;
+                background: rgba(255,255,255, 0.8);
+                width: 450px;
+                border: 1px solid #999;
+                border-radius: 10px;
+                padding: 20px 0 10px;
+                z-index: 1000;
+                -webkit-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+                -moz-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+                box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+                visibility: hidden;
+            }
+            #page-wrap {
+                padding: 10px;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events:none;
+            }
+
+            #page-wrap * {
+                pointer-events: auto;
+            }
+        </style>
+
+    </div></body>
+
+</html>

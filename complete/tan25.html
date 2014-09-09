@@ -1,0 +1,417 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <title>Quadratic Equation</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://www.dennisss.com/script/runner.js"></script>
+
+    <!--bootstrap slider-->
+    <link rel="stylesheet" href="slider/css/slider.css" />
+    <script type="text/javascript" src="slider/js/bootstrap-slider.js"></script>
+
+<script type="application/python" name="symextractions">
+'''
+I've started work on showing the effect of a coefficent in the equation,
+It's underway, and some piece of the code might be lying around in here
+For the solve part, I simply assumed that most if not all univariate expressions can be solved
+Not really well tested
+Last thing the chain of if/elif/else is kinda scary ... so I'm imaginig some scary bugs in there! tell me bout 'em
+'''
+
+def main(args):
+    
+	x, y, z = symbols('x y z')
+	a, b, c, d, e, f, g, h, i, j, k = symbols('a b c d e f g h i j k')
+	expr = "cos(x) + x + 1"
+	expp = math(args["eqn"])
+	expr = sympify(expr)
+	expp = sympify(expp)
+	stack = []
+	coef = ["$k", "$j", "$i", "$h", "$g", "$f", "$e", "$d", "$c", "$b", "$a"]
+	d = {}
+	id_stack = ["$d", "$c"]
+	single_arg = False
+	single_letter = False
+	int_present = False
+	can_be_solved = "0"
+
+	def stack_id(temp_str):
+		temp_str = str(temp_str)
+		for key in d:
+			if (key in id_stack):
+				temp_str = temp_str.replace(key, "%")
+			else:
+				id_stack.append(key)
+		
+	def cleanx(temp_str):
+		temp_str = str(temp_str)
+		temp_str = temp_str.replace("$","")
+		temp_str = sympify(temp_str)
+		return temp_str
+
+	if(isinstance(expp, Symbol)):
+		substitute = coef.pop()
+		single_letter = substitute + "*" + str(expp) 
+		d.update({substitute: int(1)})
+	elif(isinstance(expp, Integer)):
+		substitute = coef.pop()
+		single_letter = substitute 
+		d.update({substitute: str(expp)})
+	elif( len(expp.args) == 1 ):
+		single_arg = True
+
+
+	for arg in postorder_traversal(expp):
+		temp = ""
+		if( isinstance(arg, Integer) or isinstance(arg, Symbol) ):			
+			stack.append(arg)
+		elif(isinstance(arg, Rational)):
+			temp = ""
+			temp = "(" + str(arg) + ")"
+			stack.append(temp)
+		elif( isinstance(arg, Mul)):
+			mlen = len(arg.args)
+			temp = ""
+			for i in range(mlen):
+				if( i == 0 ):
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute
+						d.update({substitute:int(x)})
+						int_present = True
+					else:
+						temp = str(x)
+				else:
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute + "*" + temp
+						d.update({substitute:int(x)})
+						int_present = True
+					else:
+						temp = str(x) + "*" + temp
+			if(int_present):
+				stack.append(temp)
+				int_present = False
+				stack_id(temp)
+			else:
+				substitute = coef.pop()
+				temp = substitute + "*" + temp
+				d.update({substitute:int(1)})
+				stack.append(temp)
+				stack_id(temp)
+		elif( isinstance(arg, Add)):
+			alen = len(arg.args)
+			temp = ""
+			for i in range(alen):
+				if( i == 0 ):
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute
+						d.update({substitute:int(x)})
+					else:
+						testvar = cleanx(x)
+						if( isinstance(testvar, Mul)):
+							temp = str(x)
+						else:
+							substitute = coef.pop()
+							temp = substitute + "*" + str(x)
+							d.update({substitute: int(1)})
+				else:
+					x = stack.pop()
+					if ( isinstance(x, Integer)) :
+						substitute = coef.pop()
+						temp = substitute + " + " + temp
+						d.update({substitute:int(x)})
+					else:
+						testvar = cleanx(x)
+						if( isinstance(testvar, Mul)):
+							temp = str(x) + " + " + temp
+						else:
+							substitute = coef.pop()
+							temp = substitute + "*" + str(x) + " + " + temp
+							d.update({substitute: int(1)})		
+			stack.append(temp)
+		elif( isinstance(arg, Pow)):
+			plen = len(arg.args)
+			temp = ""
+			for i in range(plen):
+				if( i == 0 ):
+					temp = str(stack.pop())
+				else:
+					temp = str(stack.pop()) + "**" + temp
+			stack.append(temp)
+		else:
+			temp = str(arg.func)
+			x = stack.pop()
+			if( isinstance(x, Symbol)):
+				substitute = coef.pop()
+				temp = temp + "(" + substitute + "*" + str(x) + ")"
+				d.update({substitute: int(1)})
+			elif( isinstance(x, Integer)):
+				substitute = coef.pop()
+				temp = temp + "(" + substitute + ")"
+				d.update({substitute: int(x)})
+			else:
+				temp = temp + "(" + str(x) + ")"
+				
+			if(single_arg):
+				substitute = coef.pop()
+				temp = substitute + "*" + temp  
+				d.update({substitute: int(1)})			
+			stack.append(temp)
+
+
+	if(single_letter):	
+		temp = single_letter
+	else:
+		temp = str(stack.pop())
+		if(Poly(expp).is_univariate):
+			can_be_solved = "1"
+
+	return { "jsready": temp, "jsonarray": json.dumps(d), "solvable": can_be_solved }
+</script>
+
+
+    <script>
+        function graphy() {
+            var str = document.getElementById("eqn").value;
+            var sympy_str, graph_str;
+            var coeftable = {};
+            var keys = [];
+            var keys_dup = [];
+
+
+            //change all ^ to **
+            sympy_str = to_sympy(str);
+
+            //extract coefficients
+            extract();
+
+            function extract() {
+                $run("symextractions", {
+                    eqn: sympy_str
+                }, function (data) {
+                    if (data.error) {
+                        return;
+                    }
+                    graph_str = data.jsready;
+                    var parsed = JSON.parse(data.jsonarray);
+                    for (var key in parsed) {
+                        keys.push(key);
+                        coeftable[key] = parsed[key];
+                    }
+                    keys_dup = keys.slice(0);
+                    plot();
+					if(data.solvable == "1" ) {
+						$("#solve, #solution").css({
+							'visibility': 'visible'
+						});
+						$("#solution").text("");
+					}
+					else {
+						$("#solve, #solution").css({
+							'visibility': 'hidden'
+						});
+					}
+                })
+
+            }
+
+            function plot() {
+                var bp = -20;
+                var wh = windowState();
+                var main_graph = JXG.JSXGraph.initBoard('jxgbox',
+                    {
+                        boundingbox: windowState(),
+                        axis: true,
+                        grid: true,
+                        keepaspectratio: true,
+                        showNavigation: false,
+                        zoom: { wheel: true },
+                        pan: { enabled: true, needShift: false, needTwoFingers: false },
+                        showCopyright: false
+                    });
+                //make the sliders
+                for (i = 0; i < keys.length; i++) {
+                    a = coeftable[keys[i]];
+					var cname = keys[i].replace("$", "");
+                    coeftable[keys[i]] = main_graph.create('slider', [[-9, -14 - i * -1], [9, -14 - i * -1], [-10*a, a, 10*a]], { name: cname, color: "#3071A9", size: 7});
+                }
+
+                //prettify and graph equation
+                var ready_str = transify(graph_str);
+                ready_str = substi(ready_str);
+                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }], {strokeColor:'black', strokeWidth:2});
+
+				
+                function substi(eqn_str) {
+                    var p = eqn_str.indexOf(keys_dup.pop());
+                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].Value()" + eqn_str.substring(p + 2); //the sliders are right in the equation
+                    rep = rep.toString();
+                    if (keys_dup.length > 0) rep = substi(rep);
+                    return rep.toString();
+                }
+
+                addSlider();
+            }
+        }
+
+        function windowState() {
+
+            windowHeight = $(window).height();
+            windowWidth = $(window).width();
+            borderValues = [windowWidth / -10, windowHeight / 10, windowWidth / 10, windowHeight / -10];
+            return borderValues;
+
+        }
+
+        function drawSliders() {
+                $("#s0, #s1, #s2, #s3").slider({
+                    tooltip: 'always',
+                    precision: 2,
+                    value: 5,
+                    formater: function (value) {
+                        return value;
+                    }
+                });
+            }
+
+        function addSlider() {
+            var container = document.getElementById("sliders");
+            //remove existing sliders
+            while (container.hasChildNodes()) {
+                container.removeChild(container.lastChild);
+            }
+            for (i = 0; i < 3; i++) {
+                //add a slider
+                var input = document.createElement("input");
+                input.id = "s" + i;
+                container.appendChild(input);
+                container.appendChild(document.createElement("br"));
+                $("#s" + i).attr({
+                    "class": "col-md-12",
+                    "type": "text",
+                    "name": "slider" + i,
+                    "data-slider-id": "slider" + i,
+                    "data-slider-selection": "before",
+                    "data-slider-tooltip": "show"
+                });
+
+              drawSliders();
+            }
+        }
+
+        function to_sympy(str) {
+            return str.replace(/\^/g, "**");
+        }
+
+        function to_natural(str) {
+            return str.replace(/\*\*/g, "^");
+        }
+
+        //cosify, tanify, sinify, sqrify, cotify, logify
+        function transify(torify) {
+            torify = torify.replace(/(\w)\*\*(\d)/g, "Math.pow($1,$2)");
+            torify = torify.replace(/cos/g, "Math.cos");
+            torify = torify.replace(/sin/g, "Math.sin");
+            torify = torify.replace(/tan/g, "Math.tan");
+            torify = torify.replace(/sqrt/g, "Math.sqrt");
+            return torify;
+        }
+		
+		function solve() {
+			var str = document.getElementById("eqn").value;
+            sympy_str = to_sympy(str);
+			$run("solver", {
+                eqn: sympy_str
+            }, function (data) {
+                if (data.error)
+                    return;
+                roots = eval(data.solution);
+                document.getElementById("solution").innerHTML = "The solution is : x = " + roots;
+            });
+		}
+
+    </script>
+	
+    <script type="application/python" name="solver">
+        def main(args):
+            eqn = math(args["eqn"])
+            return { "solution": str(roots(eqn, multiple=True))}
+    </script>
+	
+</head>
+
+
+<body>
+    <div id="jxgbox" class="jxgbox" style="height:100vh"></div><br />
+    <div class="control">
+        <form role="form">
+            <div class="form-group">
+                <label for="exampleInputEmail1">Enter an Equation</label>
+                <input type="text" class="form-control" id="eqn" value="x^2 + 10x + 10" />
+            </div>
+            <button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
+            <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />
+            <p id="solution"></p>
+            <p id="error"></p>
+            <p id="test"></p>
+        </form>
+    </div>
+    <div id="sliders" class="sliders"></div>
+
+
+    <style>
+        .control {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background: rgba(255,255,255, 0.8);
+            width: 350px;
+            min-height: 150px;
+            border: 1px solid #999;
+            border-radius: 10px;
+            padding: 20px 30px 20px;
+            z-index: 1000;
+            -webkit-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+            -moz-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+            box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
+        }
+
+        .sliders {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            max-width: 480px;
+            width: 100%;
+            min-height: 150px;
+            padding: 20px 30px 20px;
+            z-index: 1000;
+            /*border: 1px solid #444;*/
+        }
+
+        #s1Slider .slider-selection {
+            background: #428BCA;
+        }
+
+        #slider1 .slider-selection, #slider0 .slider-selection, #slider2 .slider-selection {
+            background: #428BCA;
+        }
+
+        .slider-track {
+            background: #aaa;
+            background-image: none;
+        }
+    </style>
+
+</body>
+
+</html>
