@@ -12,13 +12,6 @@
 
 
 <script type="application/python" name="symextractions">
-'''
-I've started work on showing the effect of a coefficent in the equation,
-It's underway, and some piece of the code might be lying around in here
-For the solve part, I simply assumed that most if not all univariate expressions can be solved
-Not really well tested
-Last thing the chain of if/elif/else is kinda scary ... so I'm imaginig some scary bugs in there! tell me bout 'em
-'''
 
 def main(args):
     
@@ -356,16 +349,8 @@ def main(args):
 				
 				$("#jxgsliders").css("visibility", "visible");
 				$("#jxgsliders").children("svg").children("g").children("line:odd").attr({
-					"stroke": "#428BCA",
 					"stroke-width": "10px"
 				});
-				/*$("#jxgsliders").children("svg").children("g").children("line:odd").on('mouseenter', function(){
-					$(this).attr({
-						"stroke": "#ffff00",
-						"stroke-width": "10px"
-						});
-				});
-				//add mouseout*/
             }
         }
 
@@ -451,7 +436,7 @@ def main(args):
         <form role="form">
             <div class="form-group">
                 <label for="exampleInputEmail1">Enter an Equation</label>
-                <input type="text" class="form-control" id="eqn" value="2/sin(x) + cos(x)" />
+                <input type="text" class="form-control" id="eqn" value="cos(x)" />
             </div>
             <button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
             <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />
