@@ -1,15 +1,11 @@
 ﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 <html xmlns="http://www.w3.org/1999/xhtml">
-
 <head>
-
     <title>Quadratic Equation</title>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://www.dennisss.com/script/runner.js"></script>
-
 
 <script type="application/python" name="symextractions">
 
@@ -216,209 +212,165 @@ def main(args):
 				bounds_stack.append(y_values)
 
 
-	return { "jsready": temp, "jsonarray": json.dumps(d), "solvable": can_be_solved, "idStack": id_stack, "gbounds": bounds_stack }
+	return { "substituted_coef_str": temp, "coef_dictionary": json.dumps(d), "solvable": can_be_solved, "coef_chunks": id_stack, "eqn_limits": bounds_stack }
 </script>
 
 
     <script>
-		function initGraph() {
-				main_graph = JXG.JSXGraph.initBoard('jxgbox',
-                    {
-                        boundingbox: windowState(),
-                        axis: true,
-                        grid: true,
-                        keepaspectratio: true,
-                        showNavigation: false,
-                        zoom: { wheel: true },
-                        pan: { enabled: true, needShift: false, needTwoFingers: false },
-                        showCopyright: false
-                    });
-				var dummy = main_graph.create('point', [0,0], {visibility: "hidden"});
-				dummy.hideElement();
-			}
         function graphy() {
             var str = document.getElementById("eqn").value;
-            var sympy_str, graph_str;
-            var coeftable = {};
-            var coeftable_dup= [];
+            var sympy_str = str.replace(/\^/g, "**");
+            var graph_str;
+			var slideObjects = {};
+			var coef_dict = {};
             var keys = [];
-            var keys_dup = [];
+			var coef_list = [];
+			var bounds = [];
+			var coef_id = [];
 
-
-            //change all ^ to **
-            sympy_str = to_sympy(str);
-
-            //extract coefficients
-            extract();
-
-            function extract() {
+            //extract coefficients and initialize the variables above using sympy
+            $(function() {
                 $run("symextractions", {
                     eqn: sympy_str
                 }, function (data) {
                     if (data.error) {
+						alert(data.error);
 						return;
                     }
-                    graph_str = data.jsready;
-					coef_id = data.idStack;
-					bounds = data.gbounds;
-                    var parsed = JSON.parse(data.jsonarray);
-                    for (var key in parsed) {
-                        keys.push(key);
-                        coeftable[key] = parsed[key];
-                    }
-                    keys_dup = keys.slice(0);
-                    keys_dup2 = keys.slice(0);
-                    plot();
-					if(data.solvable == "1" ) {
+                    graph_str = data.substituted_coef_str;
+					coef_id = data.coef_chunks;
+					bounds = data.eqn_limits;
+                    coef_dict = JSON.parse(data.coef_dictionary);
+					(data.solvable == "1" ) ? is_solvable(true) : is_solvable(false);                    
+                    plot();					
+                })
+			});
+			
+			//initializes the graph canvas 
+			function initGraph(state) {
+			
+				var windowHeight = $(window).height();
+				var windowWidth = $(window).width();
+				var ww = windowWidth / -70;
+				var wn = windowHeight / 70;
+				var we = windowWidth / 70;
+				var ws = windowHeight / -70;
+				
+				main_graph = JXG.JSXGraph.initBoard('jxgbox',
+					{
+						boundingbox: windowState(),
+						axis: true,
+						grid: true,
+						keepaspectratio: true,
+						showNavigation: false,
+						zoom: { wheel: true },
+						pan: { enabled: true, needShift: false, needTwoFingers: false },
+						showCopyright: false
+					});
+				var dummy = main_graph.create('point', [0,0], {visibility: "hidden"});
+				dummy.hideElement();
+					
+				function windowState() {
+					if(state) {
+						if(state == "setBounds") {
+							for(var i=0; i<bounds.length; i++) {
+								if( bounds[i] < ws) {
+									ws = eval(bounds[i]) + ws;
+									ww = ww + eval(bounds[i]);
+								}
+								if( bounds[i] > wn ) {
+									wn = wn + eval(bounds[i]);
+									ww = ww - eval(bounds[i]);
+								}
+							}
+						}						
+					}					
+					borderValues = [ww, wn, we, ws];
+					return borderValues;
+				}
+			}
+        
+			function initSlides() {
+				//make the sliders
+				$("#jxgsliders").css({"height": 40 * keys.length});
+				var slider_graph = JXG.JSXGraph.initBoard('jxgsliders', {boundingbox: [-20, 5*keys.length, 20, -5],axis: false,showCopyright: false,showNavigation: false});					
+				var bf=[];
+				var af=[];			
+                for (var i = 0; i < keys.length; i++) {
+                    var a = coef_list[i];
+					var cname = keys[i].replace("$", "");
+					slideObjects[keys[i]] = slider_graph.create('slider', [[-19, i * 5], [9, i * 5], [-10*a, a, 10*a]],{name: cname,strokeColor: "#ddd",highlightStrokeColor: "red",fillColor: "#3071A9",id: i,});
+							
+					for( var j=0; j<coef_id.length; j++) {
+						var cindex = coef_id[j].indexOf(keys[i]);
+						if( cindex != -1) {
+							bf[i] = coef_id[j].substring(0, cindex);
+							af[i] = coef_id[j].substring(cindex+2);
+						}						
+					}					
+					slideObjects[keys[i]].setName( bf[i] + coef_list[i] + af[i] );					
+					slideObjects[keys[i]].on('drag', function() { this.setName( bf[this.id] + this.Value().toFixed(1) + af[this.id]  )});
+                }
+				$("#jxgsliders").css("visibility", "visible");
+				$("#jxgsliders").children("svg").children("g").children("line:odd").attr({
+					"stroke-width": "10px"
+				});				
+				slider_graph.addChild(main_graph);
+			}
+            
+			
+			function sanitize_graph_str(str_to_sanitize) {
+				var temp = str_to_sanitize;
+				temp = temp.replace(/(\w)\*\*(-?\d+)/g, "Math.pow($1,$2)");					
+				temp = temp.replace(/(cos\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");			
+				temp = temp.replace(/cos/g, "Math.cos");					
+				temp = temp.replace(/(sin\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
+				temp = temp.replace(/sin/g, "Math.sin");					
+				temp = temp.replace(/(tan\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
+				temp = temp.replace(/tan/g, "Math.tan");					
+				temp = temp.replace(/sqrt/g, "Math.sqrt");
+				
+				var replaced_str = "";
+				for(var i=0; i<keys.length; i++ ) {
+					var key_location = temp.indexOf(keys[i]);
+					replaced_str = temp.substring(0, key_location) + "slideObjects[keys[" + eval(i) + "]].Value()" + temp.substring(key_location + 2);
+					temp = replaced_str.toString();
+				}				
+				return temp;
+			}
+			
+			function draw(str_type, str) {
+				main_graph.create('functiongraph', [function (x) { return eval(str); }], {strokeColor:'black', strokeWidth:2});
+			}
+			
+			function plot() {
+				for (var key in coef_dict) {
+					keys.push(key);
+					coef_list.push(coef_dict[key]);
+                }
+                initGraph("setBounds");
+				initSlides(); 
+                
+				var ready_str = sanitize_graph_str(graph_str);				
+				draw("graph", ready_str);
+            }
+
+            function is_solvable(solvable) {
+            	if(solvable) {
 						$("#solve, #solution").css({
 							'visibility': 'visible'
 						});
 						$("#solution").text("");
-					}
-					else {
+            	}
+            	else {
 						$("#solve, #solution").css({
 							'visibility': 'hidden'
 						});
-					}
-                })
 
+            	}
             }
-			
-			
-
-            function plot() {
-                initGraph();
-                //make the sliders
-				$("#jxgsliders").css({"height": 40 * keys.length});
-				var slider_graph = JXG.JSXGraph.initBoard('jxgsliders',
-                    {
-                        boundingbox: [-20, 5*keys.length, 20, -5],
-						axis: false,
-						showCopyright: false,
-						showNavigation: false
-                    });	
-					
-					bf=[];
-					af=[];
-				for (i = 0; i < keys.length; i++) coeftable_dup.push(coeftable[keys[i]]);					
-                for (i = 0; i < keys.length; i++) {
-                    a = coeftable[keys[i]];
-					var cname = keys[i].replace("$", "");
-                    //coeftable[keys[i]] = slider_graph.create('slider', [[-19, i * 5], [9, i * 5], [-10*a, a, 10*a]], { name: cname, color: "#3071A9", size: 5});
-					coeftable[keys[i]] = slider_graph.create('slider', [[-19, i * 5], [9, i * 5], [-10*a, a, 10*a]],
-						{
-							name: cname,
-							strokeColor: "#ddd",
-							highlightStrokeColor: "red",
-							fillColor: "#3071A9",
-							id: i,
-						});
-					
-					crest= "";
-					for( j=0; j<coef_id.length; j++) {
-						var cindex = coef_id[j].indexOf(keys[i]);
-						if( cindex != -1) {
-							crest = coef_id[j].substring(cindex+2);
-							bf[i] = coef_id[j].substring(0, cindex);
-							af[i] = coef_id[j].substring(cindex+2);
-						}						
-					}
-					//coeftable[keys[i]].id(i.toString());
-					coeftable[keys[i]].setName( bf[i] + coeftable_dup[i] + af[i] );
-					
-					coeftable[keys[i]].on('drag', function() { this.setName( bf[this.id] + this.Value().toFixed(1) + af[this.id]  )});
-                }
-				slider_graph.unsuspendUpdate();
-				
-                //prettify and graph equation
-                var ready_str = transify(graph_str);
-                ready_str = substi(ready_str);
-				//ready_str = "1*Math.pow(Math.cos(x), -1)";
-                main_graph.create('functiongraph', [function (x) { return eval(ready_str); }], {strokeColor:'black', strokeWidth:2});
-				main_graph.unsuspendUpdate();
-				slider_graph.addChild(main_graph);
-
-				
-                function substi(eqn_str) {
-                    var p = eqn_str.indexOf(keys_dup.pop());
-                    var rep = eqn_str.substring(0, p) + "coeftable[keys[" + eval(keys_dup.length) + "]].Value()" + eqn_str.substring(p + 2); //the sliders are right in the equation
-                    rep = rep.toString();
-                    if (keys_dup.length > 0) rep = substi(rep);
-                    return rep.toString();
-                }
-				
-				$("#jxgsliders").css("visibility", "visible");
-				$("#jxgsliders").children("svg").children("g").children("line:odd").attr({
-					"stroke-width": "10px"
-				});
-            }
-        }
-
-        function windowState() {
-            windowHeight = $(window).height();
-            windowWidth = $(window).width();
-			var ww = windowWidth / -70;
-			var wn = windowHeight / 70;
-			var we = windowWidth / 70;
-			var ws = windowHeight / -70;
-			
-				for(i=0; i<bounds.length; i++) {
-					if( bounds[i] < ws) {
-						ws = eval(bounds[i]) + ws;
-						ww = ww + eval(bounds[i]);
-					}
-					if( bounds[i] > wn ) {
-						wn = wn + eval(bounds[i]);
-						ww = ww - eval(bounds[i]);
-					}
-				}
-			
-			
-            borderValues = [ww, wn, we, ws];
-            return borderValues;
-
-        }
-        
-
-        function to_sympy(str) {
-            return str.replace(/\^/g, "**");
-        }
-
-        function to_natural(str) {
-            return str.replace(/\*\*/g, "^");
-        }
-
-        //cosify, tanify, sinify, sqrify, cotify, logify
-        function transify(torify) {
-            //torify = torify.replace(/(\W{1}\w{1})\*(.)\*\*(-?\d)/g, "$1*Math.pow($2,$3)");
-			torify = torify.replace(/(\w)\*\*(-?\d+)/g, "Math.pow($1,$2)");
-			
-			torify = torify.replace(/(cos\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");			
-            torify = torify.replace(/cos/g, "Math.cos");
-			
-            torify = torify.replace(/(sin\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
-			torify = torify.replace(/sin/g, "Math.sin");
-			
-			torify = torify.replace(/(tan\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)");
-            torify = torify.replace(/tan/g, "Math.tan");
-			
-            torify = torify.replace(/sqrt/g, "Math.sqrt");
-            return torify;
-        }
+        }		
 		
-		function solve() {
-			var str = document.getElementById("eqn").value;
-            sympy_str = to_sympy(str);
-			$run("solver", {
-                eqn: sympy_str
-            }, function (data) {
-                if (data.error)
-                    return;
-                roots = eval(data.solution);
-                document.getElementById("solution").innerHTML = "The solution is : x = " + roots;
-            });
-		}
-
     </script>
 	
     <script type="application/python" name="solver">
@@ -428,26 +380,20 @@ def main(args):
     </script>
 	
 </head>
-
-
-<body onload="initGraph()">
+<body>
     <div id="jxgbox" class="jxgbox" style="height:100vh"></div><br />
     <div class="control">
         <form role="form">
             <div class="form-group">
                 <label for="exampleInputEmail1">Enter an Equation</label>
-                <input type="text" class="form-control" id="eqn" value="cos(x)" />
+                <input type="text" class="form-control" id="eqn" value="cos(x) + 40" />
             </div>
             <button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
             <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />
             <p id="solution"></p>
-            <p id="error"></p>
-            <p id="test"></p>
         </form>
     </div>
     <div id="jxgsliders" class="jxgsliders" style=" width: 460px; position: absolute;"></div>
-
-
     <style>
         .control {
             position: absolute;
@@ -464,7 +410,6 @@ def main(args):
             -moz-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
             box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
         }
-
         .jxgsliders {
 			bottom: 50px;
             left: 50px;
@@ -477,11 +422,6 @@ def main(args):
             box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
 			visibility: hidden;
         }
-		
-		
-
     </style>
-
 </body>
-
 </html>
