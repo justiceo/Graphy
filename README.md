@@ -12,4 +12,4 @@
 * JQuery
 
 ###Demo
-see [justiceo.com/graph/latest.html](http://justiceo.com/graph)
+see [justiceo.com/graph](http://justiceo.com/graph)

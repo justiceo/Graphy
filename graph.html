@@ -6,6 +6,7 @@
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://www.dennisss.com/script/runner.js"></script>
+    <script src="scripts/jstween-1.1.min.js"></script>
 
 <script type="application/python" name="symextractions">
 
@@ -217,6 +218,69 @@ def main(args):
 
 
     <script>
+		$(function() {graphManager();});
+	
+		function graphManager(state, graph_str, bounds) {
+			state = state || "init";
+			graph_str = graph_str || false;
+			borderValues = [];
+			bounds = bounds || false;
+			var main_graph;
+			
+			
+			if(state == "init" ) {
+				var windowHeight = $(window).height();
+				var windowWidth = $(window).width();
+				var ww = windowWidth / -70;
+				var wn = windowHeight / 70;
+				var we = windowWidth / 70;
+				var ws = windowHeight / -70;
+				borderValues = [ww, wn, we, ws];
+				
+				main_graph = JXG.JSXGraph.initBoard('jxgbox',
+					{
+						boundingbox: borderValues,
+						axis: true,
+						grid: true,
+						keepaspectratio: true,
+						showNavigation: false,
+						zoom: { wheel: true },
+						pan: { enabled: true, needShift: false, needTwoFingers: false },
+						showCopyright: false
+					});
+				var dummy = main_graph.create('point', [3,0], {visibility: "hidden"});
+				dummy.hideElement();
+				bounds = [50];
+				state = "setBounds";
+			}
+			
+			/*if(state == "setBounds") {
+				for(var i=0; i<bounds.length; i++) {
+					if( bounds[i] < ws) {
+						ws = eval(bounds[i]) + ws;
+						ww = ww + eval(bounds[i]);
+					}
+					if( bounds[i] > wn ) {
+						wn = wn + eval(bounds[i]);
+						ww = ww - eval(bounds[i]);
+					}
+				}
+				borderValues = [ww, wn, we, ws];
+				main_graph.setBoundingBox(borderValues, true);
+				
+				graph_str = "2x";
+				state = "draw";
+			}				
+			
+			if(state == "draw") {
+				graph_str = "2*x";
+				eval("var funcEval =  function(x){ return (" + graph_str + "); }");
+				main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
+			}*/
+			
+		}
+		
+		
         function graphy() {
             var str = document.getElementById("eqn").value;
             var sympy_str = str.replace(/\^/g, "**");
@@ -246,6 +310,10 @@ def main(args):
                 })
 			});
 			
+			function graphManager(state, str) {
+				
+			
+			}
 			//initializes the graph canvas 
 			function initGraph(state) {
 			
@@ -339,8 +407,13 @@ def main(args):
 				return temp;
 			}
 			
-			function draw(str_type, str) {
+			/*function draw(str_type, str) {
+				alert(str);
 				main_graph.create('functiongraph', [function (x) { return eval(str); }], {strokeColor:'black', strokeWidth:2});
+			}*/
+			function draw(str_type, str) {
+				eval("var funcEval =  function(x){ return (" + str + "); }");
+				main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
 			}
 			
 			function plot() {
@@ -379,15 +452,28 @@ def main(args):
             return { "solution": str(roots(eqn, multiple=True))}
     </script>
 	
+	<script>
+	 $(function() {
+		$("#new-graph").on('click', function(){
+			$("#form-group").addChild
+		});
+	 });
+	</script>
+	
 </head>
 <body>
     <div id="jxgbox" class="jxgbox" style="height:100vh"></div><br />
     <div class="control">
         <form role="form">
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom:5px;">
                 <label for="exampleInputEmail1">Enter an Equation</label>
-                <input type="text" class="form-control" id="eqn" value="cos(x) + 40" />
+                <input type="text" class="form-control" id="eqn" value="x^5" /> 
             </div>
+			<div class="new-graph" style="margin-bottom: 8px;">
+			<button type="button" id="new-graph" class="btn btn-default">
+				<span class="glyphicon glyphicon-plus"></span>
+			</button>
+			</div>
             <button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
             <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />
             <p id="solution"></p>
@@ -422,6 +508,10 @@ def main(args):
             box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
 			visibility: hidden;
         }
+		
+		.jxgbox {
+			opacity: 0.1;
+		}
     </style>
 </body>
 </html>
