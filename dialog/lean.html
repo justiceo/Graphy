@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sandbox - jQuery DialogExtend</title>
+  <meta charset=utf-8 />
+  <link href="http://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+  <script type="text/javascript" src="build/jquery.dialogextend.js"></script>
+  <style id="jsbin-css">
+  body { color: #333333; width:200em; font-family: Times, Helvetica, Arial; font-size: 16px; }
+  .ui-dialog { font-size: 12px; }
+  /***** HEADER *****/
+  header { background-color: #f0f0f0; border-radius: 1em; box-shadow: inset 0 0 10px gray; padding: 1em 1.5em 1.5em 1.5em; }
+  header h1 { margin: 0 0 0.5em 0; }
+  header ul { margin: 1em 0 0 0; }
+  /***** CONTENT *****/
+  section fieldset { margin: 5px; width: 200px; }
+  section label { cursor: pointer; }
+  #config-icon .wrapper { clear: both; }
+  #config-icon ins { float: left; margin: 0 5px 0 0; }
+  #config-icon label { float: left; }
+  #config-icon select { float: right; width: 100px; }
+  #config-method button { width: 48%; }
+  /***** FOOTER *****/
+  footer { clear: both; padding-top: 2em; }
+  footer button { background-color: #e0e0e0; border: none; border-radius: 1em; box-shadow: 0 5px 5px silver; cursor: pointer; font-size: 200%; padding: 10px 0 10px 0; text-align: center; width: 10em; }
+  footer button:hover { background-color: #d0d0d0; box-shadow: 0 5px 5px #aaaaaa; }
+  footer button:active { box-shadow: 0 4px 4px #aaaaaa; position: relative; top: 1px; }
+  </style>
+</head>
+<body>
+
+<footer>
+  <button type="button" id="new-dialog" onclick="displaySliders()">New dialog</button>
+</footer>
+<script>
+function displaySliders(){
+	var last;
+	var content = "text to be displayed";
+	var w = 500;
+	var h = 200;
+	
+    //dialog options
+    var dialogOptions = {
+      "title" : "slide title",
+      "width" : w,
+      "height" : h,
+      "modal" : false,
+      "resizable" : true,
+      "draggable" : true,
+      "close" : function(){
+        if(last[0] != this){
+          $(this).remove(); 
+        }
+      }
+    };
+	
+    //dialog-extend options
+    var dialogExtendOptions = {
+      "closable" : true,
+      "maximizable" : false,
+      "minimizable" : true,
+      "minimizeLocation" : "left",
+      "collapsable" : true,
+      "dblclick" : false,
+      "titlebar" : false
+    };
+    
+    // open dialog
+    last = $("<div />").text(content).dialog(dialogOptions).dialogExtend(dialogExtendOptions);  
+}
+
+</script>
+</body>
+</html>
