@@ -6,7 +6,7 @@
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://www.dennisss.com/script/runner.js"></script>
-    <script src="scripts/jstween-1.1.min.js"></script>
+    <!--<script src="scripts/jstween-1.1.min.js"></script>-->
 
 <script type="application/python" name="symextractions">
 
@@ -218,7 +218,7 @@ def main(args):
 
 
     <script>
-		$(function() {graphManager();});
+		//$(function() {graphManager();});
 	
 		function graphManager(state, graph_str, bounds) {
 			state = state || "init";
@@ -252,7 +252,10 @@ def main(args):
 				dummy.hideElement();
 				bounds = [50];
 				state = "setBounds";
+				//var x = addTextbox(1);
 			}
+
+
 			
 			/*if(state == "setBounds") {
 				for(var i=0; i<bounds.length; i++) {
@@ -280,7 +283,7 @@ def main(args):
 			
 		}
 		
-		function addTextbox() {
+		/*function addTextbox() {
 			var txtbox = document.createElement("div");
 			jQuery('<input/>', {
 				id: "input1",
@@ -289,7 +292,7 @@ def main(args):
 			
 			var formGroup = document.getElementById("form-group");
 			formGroup.append(txtbox);
-		}
+		}*/
 		
         function graphy() {
             var str = document.getElementById("eqn").value;
@@ -464,9 +467,9 @@ def main(args):
 	
 	<script>
 	
-	
-	function addTextbox() {
-		var formGroup = document.createElement("div");
+	function addTextbox(newId) {
+		
+		/*var formGroup = document.createElement("div");
 		$(formGroup).addClass("form-group")
 			.appendTo($("#form-control"));
 			
@@ -497,10 +500,10 @@ def main(args):
 		
 		var btn = document.createElement("div");
 		$('<button/>', {
-			id: "btn1",
+			id: "btn1" + newId,
 			class: "btn btn-default",
 			text: "+",
-			onclick: "addTextbox()"
+			onclick: "addTextbox(4)"
 		}).appendTo(btn);
 		
 		//$(chk).addClass("input-group")
@@ -511,7 +514,7 @@ def main(args):
 			.appendTo($(formGroup));
 			
 	}
-	$(function() {		
+	/*$(function() {		
 		$('.jxgbox').tween({
 		   opacity:{
 			  start: 0,
@@ -547,7 +550,7 @@ def main(args):
 		   }
 		});
 	 }); 
-	$.play();
+	$.play();*/
 	</script>
 	
 </head>
@@ -556,18 +559,13 @@ def main(args):
     <div class="control">
         <form role="form" class="form-inline" id="form-control">
             
-			<!--<div class="form-group">
-				<div class="input-group">
-					<div class="checkbox">
-							<input class="form-control" type="checkbox" checked="checked"> 
-					 </div>
-				</div>
-				<div class="input-group">
+			<div class="form-group">
+				<div id="txtbox1" class="input-group">
 					<div class="input-group-addon">f(x)</div>
 					<input id="eqn" class="form-control" type="text" placeholder="x + 2">
 				</div>
 				<div class="input-group">
-					<button class="btn btn-default">+</button>
+					<button id="new-txtbox" onclick="" class="btn btn-default">+</button>
 				</div>
 			</div>			
 			
@@ -579,6 +577,7 @@ def main(args):
     <style>
         .control {
             position: absolute;
+            top: 50px;
             left: 50px;
             background: rgba(255,255,255, 0.8);
             width: 350px;
