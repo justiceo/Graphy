@@ -465,7 +465,7 @@ def main(args):
 	<script>
 	
 	
-	$(function () {
+	function addTextbox() {
 		var formGroup = document.createElement("div");
 		$(formGroup).addClass("form-group")
 			.appendTo($("#form-control"));
@@ -499,17 +499,18 @@ def main(args):
 		$('<button/>', {
 			id: "btn1",
 			class: "btn btn-default",
-			text: "x"
+			text: "+",
+			onclick: "addTextbox()"
 		}).appendTo(btn);
 		
-		$(chk).addClass("input-group")
-			.appendTo($(formGroup));
+		//$(chk).addClass("input-group")
+			//.appendTo($(formGroup));
 		$(txt).addClass("input-group")
 			.appendTo($(formGroup));
 		$(btn).addClass("input-group")
 			.appendTo($(formGroup));
 			
-	});
+	}
 	$(function() {		
 		$('.jxgbox').tween({
 		   opacity:{
@@ -528,7 +529,17 @@ def main(args):
 						units: 'px',
 						effect: 'easeIn',
 						onStop: function() {
-							//addTextbox();
+							addTextbox();
+							$('.form-group').tween({
+								opacity: {
+									start: 50,
+									stop: 100,
+									time: 0,
+									duration: 1,
+									effect: 'easeIn'
+
+								}
+							});
 						}
 					}
 				});
