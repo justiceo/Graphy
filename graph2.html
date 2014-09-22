@@ -252,50 +252,12 @@ def main(args):
 				dummy.hideElement();
 				bounds = [50];
 				state = "setBounds";
-				//var x = addTextbox(1);
 			}
-
-
-			
-			/*if(state == "setBounds") {
-				for(var i=0; i<bounds.length; i++) {
-					if( bounds[i] < ws) {
-						ws = eval(bounds[i]) + ws;
-						ww = ww + eval(bounds[i]);
-					}
-					if( bounds[i] > wn ) {
-						wn = wn + eval(bounds[i]);
-						ww = ww - eval(bounds[i]);
-					}
-				}
-				borderValues = [ww, wn, we, ws];
-				main_graph.setBoundingBox(borderValues, true);
-				
-				graph_str = "2x";
-				state = "draw";
-			}				
-			
-			if(state == "draw") {
-				graph_str = "2*x";
-				eval("var funcEval =  function(x){ return (" + graph_str + "); }");
-				main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
-			}*/
-			
+            			
 		}
 		
-		/*function addTextbox() {
-			var txtbox = document.createElement("div");
-			jQuery('<input/>', {
-				id: "input1",
-				placeholder: "testing input"
-			}).appendTo(txtbox);
-			
-			var formGroup = document.getElementById("form-group");
-			formGroup.append(txtbox);
-		}*/
-		
         function graphy() {
-            var str = document.getElementById("eqn").value;
+            var str = document.getElementById("eqn1").value;
             var sympy_str = str.replace(/\^/g, "**");
             var graph_str;
 			var slideObjects = {};
@@ -311,7 +273,7 @@ def main(args):
                     eqn: sympy_str
                 }, function (data) {
                     if (data.error) {
-						alert(data.error);
+						//alert(data.error);
 						return;
                     }
                     graph_str = data.substituted_coef_str;
@@ -323,10 +285,6 @@ def main(args):
                 })
 			});
 			
-			function graphManager(state, str) {
-				
-			
-			}
 			//initializes the graph canvas 
 			function initGraph(state) {
 			
@@ -420,10 +378,6 @@ def main(args):
 				return temp;
 			}
 			
-			/*function draw(str_type, str) {
-				alert(str);
-				main_graph.create('functiongraph', [function (x) { return eval(str); }], {strokeColor:'black', strokeWidth:2});
-			}*/
 			function draw(str_type, str) {
 				eval("var funcEval =  function(x){ return (" + str + "); }");
 				main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
@@ -459,107 +413,18 @@ def main(args):
 		
     </script>
 	
-    <script type="application/python" name="solver">
-        def main(args):
-            eqn = math(args["eqn"])
-            return { "solution": str(roots(eqn, multiple=True))}
-    </script>
-	
 	<script>
-		
-        $(function () {
-            $('.jxgbox').tween({
-                opacity: {
-                    start: 0,
-                    stop: 100,
-                    time: 0,
-                    duration: 1,
-                    effect: 'easeInOut',
-                    onStop: function () {
-                        $('.control').tween({
-                            top: {
-                                start: -200,
-                                stop: 50,
-                                time: 0,
-                                duration: 0.5,
-                                units: 'px',
-                                effect: 'easeIn'/*,
-                                onStop: function () {
-                                    //addTextbox();
-                                    $('.form-group').tween({
-                                        opacity: {
-                                            start: 50,
-                                            stop: 100,
-                                            time: 0,
-                                            duration: 1,
-                                            effect: 'easeIn'
-
-                                        }
-                                    });
-                                }*/
-                            }
-                        });
-                    }
-                }
-            });
-        });
-        $.play();
-
-        function addTbox() {
-           // alert("tbox2");
-            $('txtbox1')
-                .clone()
-                .attr({ "id": "test" })
-                .appendTo($('#fgroup'));
-        }
-
+       
         function addTextbox() {
-            alert("adding testbox");
-		    var formGroup = document.createElement("div");
-		    $(formGroup).addClass("form-group")
-			    .appendTo($("#form-control"));
-			
-		    var chk = document.createElement("div");
-		    var chkb = $('<div/>')
-			    .addClass("checkbox")
-			    .appendTo(chk);
-		    $('<input/>', {
-			    id: "btn2",
-			    class: "form-control",
-			    type: "checkbox",
-			    checked: "checked"
-		    }).appendTo(chkb);
-		
-		
-		    var txt = document.createElement("div");
-		
-		    $('<div/>', {
-			    class: "input-group-addon",
-			    text: "f(x)"
-		    }).appendTo(txt);
-		    $('<input/>', {
-			    id: "txt2",
-			    class: "form-control",
-			    type: "text",
-			    placeholder: "x + 3"
-		    }).appendTo(txt);
-		
-		    var btn = document.createElement("div");
-		    $('<button/>', {
-			    id: "btn1" + newId,
-			    class: "btn btn-default",
-			    text: "+",
-			    onclick: "addTextbox()"
-		    }).appendTo(btn);
-		
-		    //$(chk).addClass("input-group")
-			    //.appendTo($(formGroup));
-		    $(txt).addClass("input-group")
-			    .appendTo($(formGroup));
-		    $(btn).addClass("input-group")
-			    .appendTo($(formGroup));
-			
-	}
+
+            var n = $("#txtboxes > div").length;
+            n += 1;
+            $('#txtbox1')
+                .clone()
+                .attr({ "id": "txtbox" + n})
+                .appendTo($('#txtboxes'));           
+                
+        }
 	
 	</script>
 	
@@ -569,24 +434,25 @@ def main(args):
     <div class="control">
         <form role="form" class="form-inline" id="form-control">
             
-			<div id="fgroup" class="form-group">
+			<div id="txtboxes" class="form-group">
 				<div id="txtbox1" class="input-group">
 					<div class="input-group-addon">f(x)</div>
-					<input id="eqn" class="form-control" type="text" placeholder="x + 2">
-				</div>
-				<div class="input-group">
-					<input type="button" id="new-txtbox" onclick="addTbox()" class="btn btn-default" value="+" />
+					<input id="eqn1" onkeypress="graph()" oninput="graphy()" class="form-control" type="text" placeholder="x + 2">
 				</div>
 			</div>			
-			
-            <!--<button type="button" id="graph" class="btn btn-primary" onclick="graphy()">Graph</button>
-            <button type="button" id="solve" class="btn btn-primary" onclick="" style="visibility:hidden">Solve</button><br />-->
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="button" id="new-txtbox" onclick="addTextbox()" class="btn btn-default" value="+" />
+                    <input type="button" id="clear-graph" onclick="" class="btn btn-default" value="O" />
+                </div>
+            </div>
         </form>
     </div>
     <div id="jxgsliders" class="jxgsliders" style=" width: 460px; position: absolute;"></div>
     <style>
         .control {
             position: absolute;
+            top: 50px;
             left: 50px;
             background: rgba(255,255,255, 0.8);
             width: 350px;
@@ -613,5 +479,12 @@ def main(args):
         }
 		
     </style>
+
+    <script type="application/python" name="solver">
+        def main(args):
+        eqn = math(args["eqn"])
+        return { "solution": str(roots(eqn, multiple=True))}
+    </script>
+
 </body>
 </html>
