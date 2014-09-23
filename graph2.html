@@ -427,18 +427,12 @@ def main(args):
         }
 
         $(function() {
-        	$("#txtboxes").on('keypress', ".function-box", function(){
+        	$("#txtboxes").on('input', ".function-box", function(){
         		var input_str = $(this).val();
         		graphy(input_str);
         	});
         });
 
-        function updateGraph() {
-
-        	//get source of event
-        	//get it's id
-        	//pass it to graphy, who would ( if it exit replot else create)
-        }
 	
 	</script>
 	
@@ -451,7 +445,7 @@ def main(args):
 			<div id="txtboxes" class="form-group">
 				<div id="txtbox1" class="input-group">
 					<div class="input-group-addon">f(x)</div>
-					<input id="eqn1" class="form-control function-box" type="text" placeholder="x + 2"	value="2x">
+					<input id="eqn1" class="form-control function-box" type="text" placeholder="x">
 				</div>
 			</div>			
             <div class="form-group">
