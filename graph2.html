@@ -220,6 +220,8 @@ def main(args):
 
 	var main_graph;
 	var slideObjects = {};
+	var graph_elements = {};
+	//var keys = [];
 	$(function() {graphManager();});
 
 	function graphManager(state, graph_str, bounds) {
@@ -257,21 +259,26 @@ def main(args):
         			
 	}
 
-	function draw(str, str_id) {
+	function draw(str, str_id, keys) {
 		var new_str = true;
 		var current = 0;
 		var plotted_str = {};
-		str = "Math.cos(x)";
-		
-		eval("var funcEval =  function(x){ return (" + str + "); }");
-		main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
 
-		
+		eval("var funcEval =  function(x){ return (" + str + "); }");
+		if(graph_elements[str_id]) {	
+			main_graph.removeObject(graph_elements[str_id]);		
+			graph_elements[str_id] = main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
+		}
+		else {	
+			graph_elements[str_id] = main_graph.create('functiongraph', [funcEval], {strokeColor:'black', strokeWidth:2});
+		}
+
+
 	}
 	function initSlides(coef_list, coef_id, keys) {
 		//make the sliders
 		//coef_list, keys
-
+		//alert(keys[0]);
 		$("#jxgsliders").css({"height": 40 * keys.length});
 		var slider_graph = JXG.JSXGraph.initBoard('jxgsliders', {boundingbox: [-20, 5*keys.length, 20, -5],axis: false,showCopyright: false,showNavigation: false});					
 		var bf=[];
@@ -305,7 +312,7 @@ def main(args):
     <script>
 		
         function graphy(str_to_graph, str_id) {
-            var str = str_to_graph || "cos(x)";
+            var str = str_to_graph || "0";
             var sympy_str = str.replace(/\^/g, "**");
             var graph_str;
 			var coef_dict = {};
@@ -335,7 +342,7 @@ def main(args):
 			});
 			
 			//initializes the graph  
-			function initGraph(state) {
+			/*function initGraph(state) {
 			
 				var windowHeight = $(window).height();
 				var windowWidth = $(window).width();
@@ -376,7 +383,7 @@ def main(args):
 					borderValues = [ww, wn, we, ws];
 					return borderValues;
 				}
-			}
+			}*/
         
 			
             
@@ -406,11 +413,11 @@ def main(args):
 					keys.push(key);
 					coef_list.push(coef_dict[key]);
                 }
-                initGraph("setBounds");
+                //initGraph("setBounds");
 				initSlides(coef_list, coef_id, keys); 
                 
 				var ready_str = sanitize_graph_str(graph_str);				
-				draw(ready_str, str_id);
+				draw(ready_str, str_id, keys);
             }
 
             function is_solvable(solvable) {
