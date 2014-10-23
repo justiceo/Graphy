@@ -1,7 +1,7 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Quadratic Equation</title>
+    <title>Graphy</title>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.1/jsxgraphcore.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -10,20 +10,14 @@
     <script src="scripts/jstween-1.1.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
     <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 
-    <script type="application/python" name="simplify">
-        def main(args):
-            eqn = math(args["eqn"])
-            return { "simplified": str(simplify(eqn)) }
-    </script>
-    <script>
-        $(function () {
-            $("#draggable").draggable({ handle: "#drag-handle", containment: "#page-wrap" });
-            $("#draggable2").draggable({ handle: "#drag-handle2", containment: "#page-wrap" });
-            $("#drag-handle2, #drag-handle").disableSelection();
-        });
 
-    </script>
+<script type="application/python" name="simplify">
+    def main(args):
+        eqn = math(args["eqn"])
+        return { "simplified": str(simplify(eqn)) }
+</script>
 <script>
 
 	var main_graph;
@@ -70,11 +64,12 @@
 	}
 
 	function draw(str, str_id, eColor) {
+
+
 		var new_str = true;
 		var current = 0;
 		var plotted_str = {};
 		eColor = eColor || "#000";
-		alert("drwa");
 		
 		eval("var funcEval =  function(x){ return (" + str + "); }");		
 	
@@ -104,11 +99,11 @@
     <script>
 		
         function graphy(str_to_graph, elem_id, eColor) {
-        	
             var str = str_to_graph || "0";
             var sympy_str = str.replace(/\^/g, "**");
             var graph_str;
-
+            
+                                   
 			$(function() {
                 $run("simplify", {
                     eqn: sympy_str
@@ -116,12 +111,12 @@
                     if (data.error) {
 						//alert(data.error);
 						return;
-                    }
-                    graph_str = data.simplified;	                   
+                    }	 
+                    graph_str = data.simplified; 
                     plot();					
                 })
 			});
-			
+
 			function sanitize_graph_str(t_str) {
 				t_str = t_str.replace(/(\w)\*\*(-?\d+)/g, "Math.pow($1,$2)")				
 				.replace(/(cos\(.*?\))\*\*(-?\d+)/g, "Math.pow($1, $2)")			
@@ -135,7 +130,6 @@
 			}
 			
 			function plot() {  
-			alert("plot");      
 				var ready_str = sanitize_graph_str(graph_str);				
 				draw(ready_str, elem_id, eColor);
             }
@@ -186,7 +180,7 @@
         }
 
         function removeTextbox(n) {
-        	$("#textbox" + n).remove();
+        	$("#textbox" + n).slideUp("normal", function() { $(this).remove()});;
         	removed_boxes.push(n);
         	if($("#form-control > div").length == 0) {
 				addTextbox();
@@ -261,22 +255,60 @@
 			  });
 		});
 
+		//make form control draggable
+		$(function () {
+            $("#draggable").draggable({ handle: "#drag-handle", containment: "body" });
+            $("#drag-handle").disableSelection();
+        });
+
+
 	
 	</script>
 	
 </head>
 <body>
+<div id="page-wrap">
     <div id="jxgbox" class="jxgbox" style="height:100vh;"></div><br />
     <div id="draggable" class="ui-widget-content control">
     	<p id="drag-handle" class="ui-widget-header"></p>
         <form role="form" class="form-inline" id="form-control">
-			
+			<div class="input-group">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" type="button">Fx</button>
+                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" type="button">
+                            <span class="caret"></span>
+                            <span class="sr-only">more options</span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>hello</li>
+                            <li>another</li>
+                        </ul>
+                    </div>
+                    <input id="eqn1" class="form-control function-box clearable" type="text">
+                    <!--<div class="input-group-addon">X</div>-->
+                    <!--<span class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    <span class="glyphicon glyphicon-ok form-control-feedback"></span>-->
+                </div>
         </form>  
         <div class="form-group">
-            <div class="input-group">
-                <input type="button" id="new-txtbox" onclick="addTextbox()" class="btn btn-default" value="New Function" />
-                <input type="button" id="more-elements" class="btn btn-default" value="Elements" />
-                <input type="button" id="clear-graph" class="btn btn-default" value="Clear" />
+            <div class="btn-group">
+                <button id="new-txtbox" onclick="addTextbox()" class="btn btn-default"><i class="fa fa-subscript"></i> New Function</button>
+                <button class="btn btn-default"><i class="fa fa-cog"></i> Options</button>
+                <button id="clear-graph" class="btn btn-default" ><i class="fa fa-trash"></i> Clear</button>
+            </div>
+            <div class="more-elements ">
+                <ul>
+                    <li><i class="fa fa-square-o"></i></li>
+                    <li><i class="fa fa-circle-o"></i></li>
+                    <li><i class="fa fa-dot-circle-o"></i></li>
+                    <li><i class="fa fa-save"></i></li>
+                    <li><i class="fa fa-wrench"></i></li>
+                    <li><i class="fa fa-pencil-square-o"></i></li>
+                    <li><i class="fa fa-keyboard-o"></i></li>
+                    <li><i class="fa fa-info"></i></li>
+                    <li><i class="fa fa-toggle-on"></i>for settings</li>
+                    <li><i class="fa fa-bookmark-o"></i></li>
+                </ul>  
             </div>
         </div>
     </div>
@@ -284,15 +316,16 @@
     <div class="hidden">
     	<div id="textbox" class="form-group">
 				<div class="input-group has-feedback">
-					<div class="input-group-addon">f(x)=</div>
-					<input id="eqn1" class="form-control function-box clearable" type="text" placeholder="">
+					<div class="input-group-addon">f(x)</div>
+					<input id="eqn1" class="form-control function-box clearable" type="text">
+                    <!--<div class="input-group-addon">X</div>-->
 					<!--<span class="glyphicon glyphicon-ok form-control-feedback"></span>
 					<span class="glyphicon glyphicon-ok form-control-feedback"></span>-->
 				</div>
 		</div>
 		<div id="point" class="form-group">
 			<div class="input-group" style="width: 80px;">
-				<div class="input-group-addon">X</div>
+				<div class="input-group-btn">X</div>
 				<input id="eqn1" class="form-control function-box clearable" type="text" placeholder="">
 			</div>
 			<div class="input-group" style="width: 80px;">
@@ -300,24 +333,27 @@
 				<input id="eqn1" class="form-control function-box" type="text" placeholder="">
 			</div>
 		</div>
-    </div>
-    <div id="jxgsliders" class="jxgsliders" style=" width: 460px; position: absolute;"></div>
+    </div>   
+
+</div>
     <style>
-        .control {
-            position: absolute;
+        body {
+            height: 100vh;
+        }
+        .control {            
             top: 50px;
             left: 50px;
             background: rgba(255,255,255, 0.8);
-            width: 350px;
+            width: 370px;
             min-height: 150px;
             border: 1px solid #999;
             border-radius: 10px;
             padding: 20px 30px 20px;
-            z-index: 1000;
             -webkit-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
             -moz-box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
             box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
             overflow: hidden;
+            margin: 10px 10px;
         }
         .jxgsliders {
 			bottom: 50px;
@@ -334,7 +370,7 @@
         #drag-handle {
             cursor: move;
             height: 15px;
-            width: 350px;
+            width: 370px;
             margin: -20px -30px 5px;  
             transition: background 0.5s;
 
@@ -377,13 +413,6 @@
 
 		* {outline: 0!important;}
 		
-    </style>
-
-    <script type="application/python" name="solver">
-        def main(args):
-        eqn = math(args["eqn"])
-        return { "solution": str(roots(eqn, multiple=True))}
-    </script>
-
+    </style>   
 </body>
 </html>
