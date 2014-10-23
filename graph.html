@@ -7,6 +7,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://www.dennisss.com/script/runner.js"></script>
     <link href='http://fonts.googleapis.com/css?family=Crimson+Text:400,600,600italic,400italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Jacques+Francois+Shadow' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Meddon' rel='stylesheet' type='text/css'>
     <script src="scripts/jstween-1.1.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
     <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
@@ -49,8 +51,8 @@
 					axis: true,
 					grid: true,
 					keepaspectratio: true,
-					showNavigation: false,
 					zoom: { wheel: true },
+                    showNavigation: false,
 					pan: { enabled: true, needShift: false, needTwoFingers: false },
 					showCopyright: false
 				});
@@ -93,7 +95,9 @@
 
 	function remove_element(elem_id) {
 		main_graph.removeObject(graph_elements[elem_id]);
-	}			
+	}
+
+   
 </script>
 
     <script>
@@ -167,25 +171,23 @@
 			var txtinput = txtbox.children(".input-group");           
             $(txtinput).children("input")
             	.attr({ "id" : "eqn" + n, "n": n, "eColor": eColor, "enabled": true})
-            	.css({"box-shadow":"none"})
-            	.hover(function() {
+            	.css({"box-shadow":"none"});
+            	/*.hover(function() {
             		$(this).css({"box-shadow": "0px 0px 8px " + getRGBA(eColor, 70) + " inset"});
             	}, function () {
             		$(this).css({"box-shadow": "0px 0px 8px " + getRGBA(eColor, 50) + " inset"})
-            	});
+            	});*/
             $(txtinput)
-	            .children(".input-group-addon")
+	            .children(".input-group-addon.lead")
 	            .attr({ "id": "addon" + n, "n": n})
 	            .css({ "background-color" : eColor, "cursor": "pointer" });
+            $(txtinput)
+                .children(".input-group-addon.xbutton")
+                .attr({ "n": n})
+                .css({ "cursor": "pointer" });
         }
 
-        function removeTextbox(n) {
-        	$("#textbox" + n).slideUp("normal", function() { $(this).remove()});;
-        	removed_boxes.push(n);
-        	if($("#form-control > div").length == 0) {
-				addTextbox();
-			}
-        }
+        
 
         //draw graph
         $(function() {
@@ -196,7 +198,7 @@
         
         //disable textbox
         $(function() {
-        	$("#form-control").on('click', ".input-group-addon", function(){
+        	$("#form-control").on('click', ".input-group-addon.lead", function(){
 
         		var n = $(this).attr("n");
         		if( $("#eqn"+n).attr("enabled") ) {
@@ -215,16 +217,7 @@
         	});
         });
 
-        //remove all textboxes
-    	$(function () {
-    		$("#clear-graph").on('click', function() {
-
-    			$('.tbox.form-group').remove();
-        		graphManager();
-        		addTextbox();
-    		});
-
-    	});
+        
         
         //returns color of textbox
     	function getColor(n) {
@@ -242,18 +235,45 @@
 		    return result;
 		}
 
-		//clears a textbox or triggers remove
+		//clears a textbox 
 		jQuery(function($) { 
 		  function tog(v){return v?'addClass':'removeClass';} 
 			  $(document).on('input', '.function-box', function(){
 			    $(this)[tog(this.value)]('x');
 			  }).on('mousemove', '.x', function( e ){
 			    $(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');   
-			  }).on('click', '.onX', function(){			   
-			    removeTextbox($(this).attr("n"));			    
-			    remove_element("eqn" + $(this).attr("n"));
+			  }).on('click', '.onX', function(){	
+                $(this).removeClass('x onX').val('').change();		   
+			    /*removeTextbox($(this).attr("n"));			    
+			    remove_element("eqn" + $(this).attr("n"));*/
 			  });
 		});
+
+        //remove a textbox
+        $(function() { 
+            $(document).on('click', ".xbutton", function() {
+                removeTextbox($(this).attr("n"));               
+                remove_element("eqn" + $(this).attr("n"));
+            });
+        });
+
+        function removeTextbox(n) {
+            $("#textbox" + n).slideUp("normal", function() { $(this).remove()});
+            removed_boxes.push(n);
+            if($("#form-control > div").length == 0) {
+                addTextbox();
+            }
+        }
+
+        //remove all textboxes
+        $(function () {
+            $("#clear-graph").on('click', function() {
+
+                $('.tbox.form-group').remove();
+                graphManager();
+                addTextbox();
+            });
+        });
 
 		//make form control draggable
 		$(function () {
@@ -268,36 +288,20 @@
 </head>
 <body>
 <div id="page-wrap">
+
     <div id="jxgbox" class="jxgbox" style="height:100vh;"></div><br />
     <div id="draggable" class="ui-widget-content control">
-    	<p id="drag-handle" class="ui-widget-header"></p>
+    	<p id="drag-handle" class="ui-widget-header">graphy<i id="clear-graph" title="Clear All" class="fa fa-trash"></i></p>
         <form role="form" class="form-inline" id="form-control">
-			<div class="input-group">
-                    <div class="input-group-btn">
-                        <button class="btn btn-default" type="button">Fx</button>
-                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" type="button">
-                            <span class="caret"></span>
-                            <span class="sr-only">more options</span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu">
-                            <li>hello</li>
-                            <li>another</li>
-                        </ul>
-                    </div>
-                    <input id="eqn1" class="form-control function-box clearable" type="text">
-                    <!--<div class="input-group-addon">X</div>-->
-                    <!--<span class="glyphicon glyphicon-ok form-control-feedback"></span>
-                    <span class="glyphicon glyphicon-ok form-control-feedback"></span>-->
-                </div>
+			
         </form>  
         <div class="form-group">
             <div class="btn-group">
-                <button id="new-txtbox" onclick="addTextbox()" class="btn btn-default"><i class="fa fa-subscript"></i> New Function</button>
-                <button class="btn btn-default"><i class="fa fa-cog"></i> Options</button>
-                <button id="clear-graph" class="btn btn-default" ><i class="fa fa-trash"></i> Clear</button>
+                <button id="new-txtbox" onclick="addTextbox()" class="btn btn-default"><i class="fa fa-plus"></i></button>
+                
             </div>
             <div class="more-elements ">
-                <ul>
+                <ul id="function" class="dropdown-menu" role="menu">
                     <li><i class="fa fa-square-o"></i></li>
                     <li><i class="fa fa-circle-o"></i></li>
                     <li><i class="fa fa-dot-circle-o"></i></li>
@@ -316,8 +320,9 @@
     <div class="hidden">
     	<div id="textbox" class="form-group">
 				<div class="input-group has-feedback">
-					<div class="input-group-addon">f(x)</div>
+					<div class="input-group-addon lead">f(x)</div>
 					<input id="eqn1" class="form-control function-box clearable" type="text">
+                    <div class="input-group-addon xbutton"><i class="fa fa-close"></i></div>
                     <!--<div class="input-group-addon">X</div>-->
 					<!--<span class="glyphicon glyphicon-ok form-control-feedback"></span>
 					<span class="glyphicon glyphicon-ok form-control-feedback"></span>-->
@@ -354,6 +359,7 @@
             box-shadow: 0px 0px 8px 0px rgba(100,100,100,0.75);
             overflow: hidden;
             margin: 10px 10px;
+            z-index: 10; /*important*/
         }
         .jxgsliders {
 			bottom: 50px;
@@ -369,43 +375,54 @@
         }
         #drag-handle {
             cursor: move;
-            height: 15px;
             width: 370px;
             margin: -20px -30px 5px;  
             transition: background 0.5s;
-
+            font-family: 'Meddon', cursive;
+            font-size: 20px;
+            padding: 5px 20px;
+            background: #0a8166;
+            color: #fff;
+        }
+        #drag-handle:hover {
+            color: #fff;
         }
 
+        #drag-handle i {
+            float: right;
+            margin: 5px 0 0 8px;
+            cursor: pointer;
+        }
         #drag-handle:hover, #drag-handle:focus {
         	background: #0a8166;
         	transition: background 0.5s;
         }
 
-        .input-group-addon, .function-box {
-        	font-size: 20px;
-        	font-style: italic;
-        	font-weight: 600;
-        	font-family: 'Crimson Text', sans-serif ;
+        i {
+            cursor : pointer;
         }
 
-        .input-group-addon {
+        .input-group-addon.lead {
         	color: #fff;
-        	font-size: 21px;
-        	padding: 7px 7px;
-        	border-top-right-radius: 2px !important;
-        	border-bottom-right-radius: 2px !important;
         } 
+        .input-group-addon, .function-box {
+            font-size: 20px;
+            font-style: italic;
+            font-weight: 600;
+            font-family: 'Crimson Text', sans-serif ;
+        }
 
-        .function-box {
+        /*.function-box {
         	margin-top: 3px;
         	height: 32px;
         	border-left: none;
-        }      
+        }   */   
 
         .clearable{
 			  background: #fff url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=) no-repeat right -20px center;			  
 			  padding: 3px 18px 3px 6px; /* Use the same right padding (18) in jQ! */
 			  transition: background 0.4s;
+              background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAYdJREFUOE+tkk1LAlEUhvtPMxphiqGmfbgoNEqIwERBSYOCFtEiIg2C2vQfol0uCpLsg6gIFwUSJmWWmJYhqZgWY745ek1nRk2oB97NPec+nHs5HfgHfpEUkI4GcXZ6jsfkBzkT0kJSwLN/B7ZhOWi6C0MWFy5fSIlHE0kRmdgFHPoeUBRFQmNx+57UuTSQMEgE9jBnUEBUFdCd0JqXcRUvkB4uAkny7hA2vQr0zwQUBk0LCMSypENInYRBKnKC+fF6gQhynRX716/I5XKCfDLF8k0iKZafYB9RciZgJQq9CVartWGmnW4kqpJCPgOXRcMTtBM7fFUJU5KsT2n/JmGfkw0dY7JXwmsSo1uphlrdKAMwrnmQq0kqMA9ezIxqIKZrIumEE75ICl+kpxEcCUvy5ggOnapuGgpayxL8iXfSIUQgYWHCHpj7ZbVlK0VqXMVtus1lq/IWPMCsoY8z0cpunFS5NJWwn50PeTEmqQhk5g1E85Xl4tNCUoF58mFr041wKk9O+ADfvmibG0Du4kIAAAAASUVORK5CYII=);
 		}
 		.clearable.x  { background-position: right 5px center; }
 
